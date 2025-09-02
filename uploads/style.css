@@ -1,0 +1,990 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --pacific-blue: #1B365D;
+            --sustainable-teal: #2D7D7D;
+            --coral-innovation: #FF6B47;
+            --pearl-white: #F8F9FA;
+            --pearl-light: #FFFFFF;
+            --text-secondary: #666;
+            --border-light: #E8F4F8;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--pacific-blue);
+            background: var(--pearl-white);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .container-wide {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--pearl-light);
+            box-shadow: 0 2px 20px rgba(27, 54, 93, 0.08);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .island-logo {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .island {
+            border-radius: 50% 30% 60% 40%;
+            animation: gentleFloat 4s ease-in-out infinite;
+        }
+        
+        .island-1 {
+            width: 12px;
+            height: 12px;
+            background: var(--pacific-blue);
+            animation-delay: 0s;
+        }
+        
+        .island-2 {
+            width: 10px;
+            height: 10px;
+            background: var(--sustainable-teal);
+            animation-delay: 0.8s;
+        }
+        
+        .island-3 {
+            width: 8px;
+            height: 8px;
+            background: var(--coral-innovation);
+            animation-delay: 1.6s;
+        }
+        
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0px); }
+            33% { transform: translateY(-2px); }
+            66% { transform: translateY(-1px); }
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--pacific-blue);
+            letter-spacing: 1px;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 35px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            text-decoration: none;
+            color: var(--sustainable-teal);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover {
+            color: var(--coral-innovation);
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--coral-innovation);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, var(--coral-innovation) 0%, #E64A24 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 71, 0.3);
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: var(--pacific-blue);
+            margin: 4px 0;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--pearl-white) 0%, var(--border-light) 100%);
+            padding: 140px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 30, 60, 0.25) 0%,   /* lebih ringan */
+                rgba(0, 30, 60, 0.15) 40%,  /* hampir transparan */
+                rgba(0, 0, 0, 0.3) 100%     /* sedikit lebih gelap di bawah */
+            );
+            z-index: 1;
+        }
+        
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 30%;
+            left: -5%;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255, 107, 71, 0.08) 0%, transparent 70%);
+            border-radius: 50% 30% 60% 40%;
+            animation: heroFloat 10s ease-in-out infinite reverse;
+        }
+        
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.7; /* bisa disesuaikan, bikin konten lebih jelas */
+        }
+        
+        .hero-content {
+            background: rgba(0, 0, 0, 0.25);
+            position: relative;
+            animation: fadeInUp 1.2s ease-out forwards;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1.5px;
+            text-shadow: 0 6px 20px rgba(0,0,0,0.8);
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #5eead4; /* teal accent */
+            margin-bottom: 25px;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            color: #e5e7eb;
+            margin-bottom: 40px;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-secondary {
+            background: transparent;
+            color: var(--sustainable-teal);
+            border: 2px solid var(--sustainable-teal);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .cta-secondary:hover {
+            background: var(--sustainable-teal);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Services Section */
+        .services {
+            padding: 100px 0;
+            background: var(--pearl-light);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 200;
+            color: var(--pacific-blue);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--sustainable-teal);
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+        
+        .service-card {
+            background: var(--pearl-light);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(27, 54, 93, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--sustainable-teal), var(--coral-innovation));
+        }
+        
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(27, 54, 93, 0.15);
+        }
+        
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .service-icon .island {
+            position: absolute;
+        }
+        
+        .bond-icon .island-1 { top: 5px; left: 5px; }
+        .bond-icon .island-2 { top: 15px; left: 25px; }
+        .bond-icon .island-3 { top: 25px; left: 10px; }
+        
+        .esg-icon .island-1 { top: 10px; left: 15px; }
+        .esg-icon .island-2 { top: 5px; left: 30px; }
+        .esg-icon .island-3 { top: 25px; left: 20px; }
+        
+        .climate-icon .island-1 { top: 8px; left: 8px; }
+        .climate-icon .island-2 { top: 20px; left: 25px; }
+        .climate-icon .island-3 { top: 30px; left: 5px; }
+        
+        .digital-icon .island-1 { top: 12px; left: 12px; }
+        .digital-icon .island-2 { top: 8px; left: 28px; }
+        .digital-icon .island-3 { top: 28px; left: 20px; }
+        
+        .service-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--pacific-blue);
+            margin-bottom: 15px;
+        }
+        
+        .service-description {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .service-features {
+            list-style: none;
+        }
+        
+        .service-features li {
+            color: var(--sustainable-teal);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .service-features li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--coral-innovation);
+            font-weight: 600;
+        }
+        
+        /* Approach Section */
+        .approach {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--pacific-blue) 0%, var(--sustainable-teal) 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .approach::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 107, 71, 0.1);
+            border-radius: 50% 30% 60% 40%;
+            animation: approachFloat 12s ease-in-out infinite;
+        }
+        
+        .approach::after {
+            content: '';
+            position: absolute;
+            bottom: 15%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            background: rgba(248, 249, 250, 0.08);
+            border-radius: 50% 30% 60% 40%;
+            animation: approachFloat 15s ease-in-out infinite reverse;
+        }
+        
+        @keyframes approachFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-15px) rotate(3deg); }
+            66% { transform: translateY(-5px) rotate(-2deg); }
+        }
+        
+        .approach-content {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        .approach-text {
+            max-width: 500px;
+        }
+        
+        .approach-title {
+            font-size: 2.8rem;
+            font-weight: 200;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+        
+        .approach-description {
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .approach-principles {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .principle {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .principle-icon {
+            width: 8px;
+            height: 8px;
+            background: var(--coral-innovation);
+            border-radius: 50% 30% 60% 40%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        
+        .principle-text {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .approach-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .ecosystem-diagram {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+        
+        .ecosystem-island {
+            position: absolute;
+            border-radius: 50% 30% 60% 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.2;
+            animation: ecosystemFloat 6s ease-in-out infinite;
+        }
+        
+        .ecosystem-island.central {
+            width: 100px;
+            height: 100px;
+            background: var(--coral-innovation);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            animation-delay: 0s;
+        }
+        
+        .ecosystem-island.bond {
+            width: 70px;
+            height: 70px;
+            background: rgba(248, 249, 250, 0.2);
+            top: 20%;
+            left: 60%;
+            animation-delay: 1s;
+        }
+        
+        .ecosystem-island.esg {
+            width: 60px;
+            height: 60px;
+            background: rgba(248, 249, 250, 0.15);
+            top: 60%;
+            left: 80%;
+            animation-delay: 2s;
+        }
+        
+        .ecosystem-island.climate {
+            width: 65px;
+            height: 65px;
+            background: rgba(248, 249, 250, 0.18);
+            bottom: 20%;
+            left: 50%;
+            animation-delay: 3s;
+        }
+        
+        .ecosystem-island.digital {
+            width: 55px;
+            height: 55px;
+            background: rgba(248, 249, 250, 0.12);
+            top: 40%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes ecosystemFloat {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+            50% { transform: translate(-50%, -50%) translateY(-8px); }
+        }
+        
+
+        
+        /* About Section */
+        .about {
+            padding: 100px 0;
+            background: var(--pearl-light);
+        }
+        
+        .about-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .about-intro {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .about-lead {
+            font-size: 1.3rem;
+            color: var(--pacific-blue);
+            font-weight: 300;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+        
+        .expertise-area {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .expertise-icon {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .expertise-icon .island {
+            border-radius: 50% 30% 60% 40%;
+            animation: gentleFloat 4s ease-in-out infinite;
+        }
+        
+        .expertise-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--pacific-blue);
+            margin-bottom: 15px;
+        }
+        
+        .expertise-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .about-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 50px;
+            margin-bottom: 80px;
+        }
+        
+        .detail-section {
+            padding: 30px;
+            background: var(--pearl-white);
+            border-radius: 15px;
+            border-left: 4px solid var(--sustainable-teal);
+        }
+        
+        .detail-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--pacific-blue);
+            margin-bottom: 15px;
+        }
+        
+        .detail-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .leadership-highlight {
+            background: linear-gradient(135deg, var(--sustainable-teal) 0%, var(--pacific-blue) 100%);
+            border-radius: 20px;
+            padding: 50px 40px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .leadership-highlight::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            right: 5%;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 107, 71, 0.1);
+            border-radius: 50% 30% 60% 40%;
+            animation: highlightFloat 10s ease-in-out infinite;
+        }
+        
+        @keyframes highlightFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(8deg); }
+        }
+        
+        .highlight-content {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .highlight-text h3 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .highlight-text p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .floating-islands-about {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .about-island {
+            width: 20px;
+            height: 20px;
+            border-radius: 50% 30% 60% 40%;
+            animation: aboutIslandFloat 3s ease-in-out infinite;
+            opacity: 0.8;
+        }
+        
+        @keyframes aboutIslandFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--border-light) 0%, var(--pearl-light) 100%);
+            text-align: center;
+        }
+        
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 200;
+            color: var(--pacific-blue);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+        
+        .cta-description {
+            font-size: 1.2rem;
+            color: var(--sustainable-teal);
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--pacific-blue);
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-brand {
+            max-width: 300px;
+        }
+        
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-logo .logo-text {
+            color: white;
+        }
+        
+        .footer-description {
+            opacity: 0.8;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .footer-section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--coral-innovation);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            opacity: 1;
+            color: var(--coral-innovation);
+        }
+        
+        .footer-contact p {
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 30px;
+            text-align: center;
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .approach-content {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+            
+            .highlight-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            
+            .about-details {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .approach-title {
+                font-size: 2.2rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container, .container-wide {
+                padding: 0 15px;
+            }
+            
+            .hero {
+                padding: 120px 0 80px;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .services, .approach, .about, .cta-section {
+                padding: 60px 0;
+            }
+            
+            .service-card {
+                padding: 30px 20px;
+            }
+            
+            .leadership-highlight {
+                padding: 30px 20px;
+            }
+            
+            .about-lead {
+                font-size: 1.1rem;
+            }
+            
+            .ecosystem-diagram {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .ecosystem-island.central {
+                width: 80px;
+                height: 80px;
+                font-size: 0.8rem;
+            }
+            
+            .ecosystem-island.bond,
+            .ecosystem-island.esg,
+            .ecosystem-island.climate,
+            .ecosystem-island.digital {
+                width: 50px;
+                height: 50px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--pearl-white);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--sustainable-teal);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--pacific-blue);
+        }
