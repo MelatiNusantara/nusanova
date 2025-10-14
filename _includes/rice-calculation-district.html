@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kalkulator Kelayakan Usaha Tani Padi</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root{
+      --pacific-blue:#1B365D; --sustainable-teal:#2D7D7D; --coral-innovation:#FF6B47;
+      --pearl-white:#F8F9FA; --pearl-light:#FFFFFF; --text-secondary:#666; --border-light:#E8F4F8;
+    }
+    *{box-sizing:border-box}
+    body.farm-simulator-body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      margin: 0;
+      color: var(--pacific-blue);
+    }
+    .farm-simulator-container {
+      max-width:960px;
+      margin:auto;
+      margin-top: 100px;
+      margin-bottom: 100px;
+      background:var(--pearl-light);
+      padding:36px;
+      border-radius:14px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    }
+    h1{text-align:center;color:var(--pacific-blue);font-size:28px;margin-bottom:20px}
+    h2{color:var(--sustainable-teal);border-left:6px solid var(--coral-innovation);padding-left:12px;margin:28px 0 14px;font-size:20px}
+    h3{font-size:16px;color:var(--pacific-blue);margin:12px 0}
+    .input-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:18px}
+    .input-group{display:flex;flex-direction:column}
+    label{margin-bottom:4px;font-weight:600;font-size:14px;color:var(--pacific-blue)}
+    small{display:block;color:var(--text-secondary);font-size:12px;margin-bottom:6px}
+    input, select {padding:10px;border:1px solid var(--border-light);border-radius:8px;font-size:15px;transition:border-color .2s}
+    input:focus, select:focus{outline:none;border-color:var(--sustainable-teal)}
+    button{display:block;width:100%;padding:14px;background:var(--coral-innovation);color:#fff;border:none;border-radius:8px;font-size:17px;font-weight:700;cursor:pointer;margin-top:12px}
+    button:hover{background:#e25838}
+    .btn-reset{
+      background:#6c757d;
+    }
+    .btn-reset:hover{
+      background:#5a6268;
+    }
+    .output-section{margin-top:22px;padding:18px;border-radius:12px;background:var(--pearl-white);border:1px solid var(--border-light);display:none}
+    .output-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+    .result-card{background:var(--pearl-light);padding:16px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.05);border-top:4px solid var(--sustainable-teal)}
+    .result-card h3{margin:0 0 10px}
+    .result-card p{margin:6px 0;font-size:15px;font-weight:700;color:#333}
+    .result-card .label{display:block;font-size:12px;font-weight:400;color:var(--text-secondary)}
+    .result-card .calc-detail{ font-size: 11px; color: #888; font-weight: normal; }
+    .summary-card{grid-column:1/-1;border-top-color:var(--coral-innovation)}
+    .good{color:#27ae60}.bad{color:#e74c3c}
+    .packaging-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:8px}
+    .packaging-grid label{font-size:13px;margin-bottom:6px}
+    .packaging-grid input{padding:8px}
+    hr { border: none; border-top: 1px solid #eee; margin: 15px 0; }
+    @media(max-width:720px){.output-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body class="farm-simulator-body">
+  <div class="farm-simulator-container">
+    <h1>🌾 Kalkulator Kelayakan Usaha Tani Padi</h1>
+    
+    <div class="input-group" style="margin-bottom: 20px;">
+      <label for="lokasi">Pilih Lokasi Prasetel</label>
+      <select id="lokasi" onchange="setLokasiDefaults()">
+        <option value="">-- Pilih Lokasi --</option>
+        <option value="sukabumi">Desa Karang Tengah, Sukabumi</option>
+        <option value="sukabumi_v2">Desa Karang Tengah, Sukabumi (Versi DSR)</option>
+        <option value="generic">Contoh Umum</option>
+        <optgroup label="Data Produktivitas Provinsi (BPS 2023)">
+            <option value="aceh">Aceh</option>
+            <option value="sumut">Sumatera Utara</option>
+            <option value="sumbar">Sumatera Barat</option>
+            <option value="riau">Riau</option>
+            <option value="jambi">Jambi</option>
+            <option value="sumsel">Sumatera Selatan</option>
+            <option value="bengkulu">Bengkulu</option>
+            <option value="lampung">Lampung</option>
+            <option value="babel">Kep. Bangka Belitung</option>
+            <option value="kepri">Kep. Riau</option>
+            <option value="dki">DKI Jakarta</option>
+            <option value="jabar">Jawa Barat</option>
+            <option value="jateng">Jawa Tengah</option>
+            <option value="yogya">DI Yogyakarta</option>
+            <option value="jatim">Jawa Timur</option>
+            <option value="banten">Banten</option>
+            <option value="bali">Bali</option>
+            <option value="ntb">Nusa Tenggara Barat</option>
+            <option value="ntt">Nusa Tenggara Timur</option>
+            <option value="kalbar">Kalimantan Barat</option>
+            <option value="kalteng">Kalimantan Tengah</option>
+            <option value="kalsel">Kalimantan Selatan</option>
+            <option value="kaltim">Kalimantan Timur</option>
+            <option value="kalut">Kalimantan Utara</option>
+            <option value="sulut">Sulawesi Utara</option>
+            <option value="sulteng">Sulawesi Tengah</option>
+            <option value="sulsel">Sulawesi Selatan</option>
+            <option value="sultra">Sulawesi Tenggara</option>
+            <option value="gorontalo">Gorontalo</option>
+            <option value="sulbar">Sulawesi Barat</option>
+            <option value="maluku">Maluku</option>
+            <option value="malut">Maluku Utara</option>
+            <option value="pabar">Papua Barat</option>
+            <option value="pabardaya">Papua Barat Daya</option>
+            <option value="papua">Papua</option>
+            <option value="papuaselatan">Papua Selatan</option>
+            <option value="papuatengah">Papua Tengah</option>
+            <option value="papuapegunungan">Papua Pegunungan</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <form id="farmCalculator" onsubmit="return false;">
+      <h2>🌱 Parameter Lahan & Produksi</h2>
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="luasLahan">Luas Cluster (ha)</label>
+          <small>Total luas lahan yang dikelola (hektar)</small>
+          <input type="number" id="luasLahan" value="0" step="0.1" required>
+        </div>
+        <div class="input-group">
+          <label for="produktivitasGKP">Produktivitas GKP (ton/ha)</label>
+          <small>GKP = <b>Gabah Kering Panen</b> (gabah hasil panen, kadar air ≈ 20–25%)</small>
+          <input type="number" id="produktivitasGKP" value="0" step="0.1" required>
+        </div>
+        <div class="input-group">
+          <label for="indexTanam">Index Tanam (kali/tahun)</label>
+          <small>Jumlah siklus tanam per tahun (mis. 2 = tanam 2 kali/tahun)</small>
+          <input type="number" id="indexTanam" value="1" step="1" required>
+        </div>
+      </div>
+      
+      <h2>💰 Parameter Biaya Umum (per ha per siklus)</h2>
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="biayaTenagaKerjaUmum">Tenaga Kerja (Umum)</label>
+          <small>Upah buruh untuk budidaya per ha per siklus</small>
+          <input type="text" id="biayaTenagaKerjaUmum" class="format-number" value="0" required>
+        </div>
+        <div class="input-group">
+          <label for="biayaLogistik">Logistik</label>
+          <small>Transport & logistik input/hasil (per ha per siklus)</small>
+          <input type="text" id="biayaLogistik" class="format-number" value="0" required>
+        </div>
+        <div class="input-group">
+          <label for="biayaSewa">Sewa/Borongan</label>
+          <small>Sewa lahan atau biaya borongan (per ha per siklus)</small>
+          <input type="text" id="biayaSewa" class="format-number" value="0" required>
+        </div>
+        <div class="input-group">
+          <label for="biayaAdmin">Administrasi</label>
+          <small>Biaya administrasi & operasional kecil</small>
+          <input type="text" id="biayaAdmin" class="format-number" value="0" required>
+        </div>
+      </div>
+
+      <h2>💰 Rincian Biaya Sarana Produksi (Saprodi) per Ha</h2>
+      <div class="input-grid">
+        <div class="input-group"><label for="biayaBenih">Benih</label><input type="text" id="biayaBenih" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="biayaUrea">Urea</label><input type="text" id="biayaUrea" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="biayaNpk">NPK</label><input type="text" id="biayaNpk" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="biayaTsp">TSP</label><input type="text" id="biayaTsp" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="biayaKcl">KCL</label><input type="text" id="biayaKcl" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="biayaPestisida">Pestisida</label><input type="text" id="biayaPestisida" class="format-number" value="0" required></div>
+      </div>
+      
+      <h2>💪 Rincian Biaya Tenaga Kerja per Ha</h2>
+      <div class="input-grid">
+          <div class="input-group"><label for="biayaTraktor">Traktor</label><small>Biaya sewa atau pinjam traktor</small><input type="text" id="biayaTraktor" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaPraTanam">Pra-Tanam</label><small>Persemaian, Tumpang Galor, dll.</small><input type="text" id="biayaPraTanam" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaTanam">Tanam/Tandur</label><input type="text" id="biayaTanam" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaPemeliharaan">Pemeliharaan</label><small>Penyiangan, Pemupukan</small><input type="text" id="biayaPemeliharaan" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaPenyemprotanPestisida">Penyemprotan Pestisida</label><input type="text" id="biayaPenyemprotanPestisida" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaPenyemprotanZpt">Penyemprotan ZPT</label><input type="text" id="biayaPenyemprotanZpt" class="format-number" value="0" required></div>
+          <div class="input-group"><label for="biayaPanen">Panen</label><input type="text" id="biayaPanen" class="format-number" value="0" required></div>
+      </div>
+      
+      <h2>📈 Parameter Harga Jual</h2>
+      <div class="input-grid">
+        <div class="input-group" style="grid-column: 1 / -1;">
+            <label for="hargaGKP">Harga Jual GKP (Rp/kg)</label>
+            <small>GKP (Gabah Kering Panen)</small>
+            <input type="text" id="hargaGKP" class="format-number" value="0" required>
+        </div>
+      </div>
+
+      <button type="button" onclick="calculate()">Hitung Kelayakan Awal</button>
+      <button type="button" id="resetButton" class="btn-reset" style="display:none;" onclick="resetCalculator()">🔄 Hitung Ulang</button>
+    </form>
+
+    <div id="outputSection" class="output-section">
+      <h2>📊 Hasil Analisis On-Farm</h2>
+      <div class="output-grid">
+        <div class="result-card" id="outputPerHektar"></div>
+        <div class="result-card" id="outputTotalCluster"></div>
+      </div>
+    </div>
+
+    <div id="millingSection" class="output-section">
+      <h2>🏭 Parameter Penggilingan & Penjualan</h2>
+      <small style="display:block;margin-bottom:12px;color:var(--text-secondary)">
+        GKG = <b>Gabah Kering Giling</b> (setelah pengeringan ideal ≈ 14% air). Rendemen menunjukkan persentase konversi antar tahap.
+      </small>
+
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="rendemenGKG">Rendemen GKP ➜ GKG (%)</label>
+          <small>Persentase GKG yang diperoleh dari GKP setelah pengeringan</small>
+          <input type="number" id="rendemenGKG" value="0" step="0.01" required>
+        </div>
+        <div class="input-group">
+          <label for="rendemenBeras">Rendemen GKG ➜ Beras (%)</label>
+          <small>Persentase beras yang diperoleh dari GKG setelah penggilingan</small>
+          <input type="number" id="rendemenBeras" value="0" step="0.01" required>
+        </div>
+        <div class="input-group">
+          <label for="proporsiMedium">Proporsi Beras Medium (%)</label>
+          <small>Persentase beras yang masuk kualitas medium</small>
+          <input type="number" id="proporsiMedium" value="0" step="1" required>
+        </div>
+        <div class="input-group">
+          <label for="proporsiPremium">Proporsi Beras Premium (%)</label>
+          <small>Persentase beras yang masuk kualitas premium</small>
+          <input type="number" id="proporsiPremium" value="0" step="1" required>
+        </div>
+        <div class="input-group">
+          <label for="biayaProses">Biaya Proses (Rp/kg GKP)</label>
+          <small>Biaya penggilingan + tenaga + listrik per kg GKP</small>
+          <input type="text" id="biayaProses" class="format-number" value="0" required>
+        </div>
+      </div>
+
+      <h3>Harga Jual per Karung (Rp)</h3>
+      <div class="packaging-grid">
+        <div class="input-group"><label for="hargaMedium5">Medium 5kg</label><input type="text" id="hargaMedium5" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="hargaMedium10">Medium 10kg</label><input type="text" id="hargaMedium10" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="hargaMedium25">Medium 25kg</label><input type="text" id="hargaMedium25" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="hargaPremium5">Premium 5kg</label><input type="text" id="hargaPremium5" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="hargaPremium10">Premium 10kg</label><input type="text" id="hargaPremium10" class="format-number" value="0" required></div>
+        <div class="input-group"><label for="hargaPremium25">Premium 25kg</label><input type="text" id="hargaPremium25" class="format-number" value="0" required></div>
+      </div>
+      <button type="button" onclick="calculateMilling()">Hitung Analisis Bisnis Lengkap</button>
+      <div id="millingOutputContainer" style="display:none;margin-top:18px;">
+        <h2>📈 Hasil Akhir Proses Bisnis (Hulu-Hilir)</h2>
+        <div class="output-grid">
+          <div class="result-card" id="outputMillingResult"></div>
+          <div class="result-card" id="outputPackaging"></div>
+          <div class="result-card summary-card" id="outputFinancialSummary"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let totalBiayaOnFarm_tahunan = 0;
+let totalKeuntunganOnFarm_tahunan = 0;
+
+const lokasiDefaults = {
+  sukabumi: {
+    luasLahan: 30,
+    produktivitasGKP: 6,
+    indexTanam: 1,
+    biayaTenagaKerjaUmum: 0,
+    biayaLogistik: 0,
+    biayaSewa: 0,
+    biayaAdmin: 0,
+    biayaBenih: 555000,
+    biayaUrea: 562500,
+    biayaNpk: 575000,
+    biayaPestisida: 1400000,
+    biayaTsp: 0,
+    biayaKcl: 0,
+    biayaTraktor: 0,
+    biayaPraTanam: 2100000,
+    biayaTanam: 2000000,
+    biayaPemeliharaan: 1400000,
+    biayaPenyemprotanPestisida: 0,
+    biayaPenyemprotanZpt: 0,
+    biayaPanen: 3600000,
+    hargaGKP: 5000,
+    rendemenGKG: 86,
+    rendemenBeras: 62.74,
+    proporsiMedium: 75,
+    proporsiPremium: 25,
+    biayaProses: 700,
+    hargaMedium5: 59000,
+    hargaMedium10: 117000,
+    hargaMedium25: 292500,
+    hargaPremium5: 64000,
+    hargaPremium10: 127000,
+    hargaPremium25: 317500,
+  },
+  sukabumi_v2: {
+    luasLahan: 30,
+    produktivitasGKP: 8,
+    indexTanam: 1,
+    biayaTenagaKerjaUmum: 0,
+    biayaLogistik: 0,
+    biayaSewa: 0,
+    biayaAdmin: 0,
+    biayaBenih: 925000,
+    biayaUrea: 2000000,
+    biayaNpk: 1500000,
+    biayaPestisida: 1400000,
+    biayaTsp: 1500000,
+    biayaKcl: 1000000,
+    biayaTraktor: 0,
+    biayaPraTanam: 900000,
+    biayaTanam: 1800000,
+    biayaPemeliharaan: 1500000,
+    biayaPenyemprotanPestisida: 0,
+    biayaPenyemprotanZpt:0,
+    biayaPanen: 2700000,
+    hargaGKP: 5000,
+    rendemenGKG: 86,
+    rendemenBeras: 62.74,
+    proporsiMedium: 75,
+    proporsiPremium: 25,
+    biayaProses: 700,
+    hargaMedium5: 59000,
+    hargaMedium10: 117000,
+    hargaMedium25: 292500,
+    hargaPremium5: 64000,
+    hargaPremium10: 127000,
+    hargaPremium25: 317500,
+  },
+  generic: {
+    luasLahan: 870.5,
+    produktivitasGKP: 5,
+    indexTanam: 2,
+    biayaTenagaKerjaUmum: 5200000,
+    biayaLogistik: 3054000,
+    biayaSewa: 5000000,
+    biayaAdmin: 371112,
+    biayaBenih: 0,
+    biayaUrea: 0,
+    biayaNpk: 0,
+    biayaPestisida: 0,
+    biayaTsp: 0,
+    biayaKcl: 0,
+    biayaTraktor: 0,
+    biayaPraTanam: 0,
+    biayaTanam: 0,
+    biayaPemeliharaan: 0,
+    biayaPenyemprotanPestisida: 0,
+    biayaPenyemprotanZpt:0,
+    biayaPanen: 0,
+    hargaGKP: 4500,
+    rendemenGKG: 86.02,
+    rendemenBeras: 62.74,
+    proporsiMedium: 75,
+    proporsiPremium: 25,
+    biayaProses: 700,
+    hargaMedium5: 59000,
+    hargaMedium10: 117000,
+    hargaMedium25: 292500,
+    hargaPremium5: 64000,
+    hargaPremium10: 127000,
+    hargaPremium25: 317500,
+  },
+  // Data Provinsi (hanya produksi, asumsi luas 1 ha & 2x tanam)
+  aceh: { luasLahan: 1, produktivitasGKP: 5.51, indexTanam: 2 },
+  sumut: { luasLahan: 1, produktivitasGKP: 5.26, indexTanam: 2 },
+  sumbar: { luasLahan: 1, produktivitasGKP: 4.59, indexTanam: 2 },
+  riau: { luasLahan: 1, produktivitasGKP: 3.94, indexTanam: 2 },
+  jambi: { luasLahan: 1, produktivitasGKP: 4.56, indexTanam: 2 },
+  sumsel: { luasLahan: 1, produktivitasGKP: 5.58, indexTanam: 2 },
+  bengkulu: { luasLahan: 1, produktivitasGKP: 4.89, indexTanam: 2 },
+  lampung: { luasLahan: 1, produktivitasGKP: 5.25, indexTanam: 2 },
+  babel: { luasLahan: 1, produktivitasGKP: 4.26, indexTanam: 2 },
+  kepri: { luasLahan: 1, produktivitasGKP: 2.69, indexTanam: 2 },
+  dki: { luasLahan: 1, produktivitasGKP: 4.63, indexTanam: 2 },
+  jabar: { luasLahan: 1, produktivitasGKP: 5.85, indexTanam: 2 },
+  jateng: { luasLahan: 1, produktivitasGKP: 5.72, indexTanam: 2 },
+  yogya: { luasLahan: 1, produktivitasGKP: 4.67, indexTanam: 2 },
+  jatim: { luasLahan: 1, produktivitasGKP: 5.73, indexTanam: 2 },
+  banten: { luasLahan: 1, produktivitasGKP: 5.18, indexTanam: 2 },
+  bali: { luasLahan: 1, produktivitasGKP: 6.12, indexTanam: 2 },
+  ntb: { luasLahan: 1, produktivitasGKP: 5.16, indexTanam: 2 },
+  ntt: { luasLahan: 1, produktivitasGKP: 4.20, indexTanam: 2 },
+  kalbar: { luasLahan: 1, produktivitasGKP: 3.09, indexTanam: 2 },
+  kalteng: { luasLahan: 1, produktivitasGKP: 3.30, indexTanam: 2 },
+  kalsel: { luasLahan: 1, produktivitasGKP: 4.18, indexTanam: 2 },
+  kaltim: { luasLahan: 1, produktivitasGKP: 3.96, indexTanam: 2 },
+  kalut: { luasLahan: 1, produktivitasGKP: 3.63, indexTanam: 2 },
+  sulut: { luasLahan: 1, produktivitasGKP: 4.62, indexTanam: 2 },
+  sulteng: { luasLahan: 1, produktivitasGKP: 4.41, indexTanam: 2 },
+  sulsel: { luasLahan: 1, produktivitasGKP: 5.07, indexTanam: 2 },
+  sultra: { luasLahan: 1, produktivitasGKP: 4.28, indexTanam: 2 },
+  gorontalo: { luasLahan: 1, produktivitasGKP: 5.00, indexTanam: 2 },
+  sulbar: { luasLahan: 1, produktivitasGKP: 5.05, indexTanam: 2 },
+  maluku: { luasLahan: 1, produktivitasGKP: 3.81, indexTanam: 2 },
+  malut: { luasLahan: 1, produktivitasGKP: 3.33, indexTanam: 2 },
+  pabar: { luasLahan: 1, produktivitasGKP: 4.05, indexTanam: 2 },
+  pabardaya: { luasLahan: 1, produktivitasGKP: 2.72, indexTanam: 2 },
+  papua: { luasLahan: 1, produktivitasGKP: 4.31, indexTanam: 2 },
+  papuaselatan: { luasLahan: 1, produktivitasGKP: 4.62, indexTanam: 2 },
+  papuatengah: { luasLahan: 1, produktivitasGKP: 4.23, indexTanam: 2 },
+  papuapegunungan: { luasLahan: 1, produktivitasGKP: 4.39, indexTanam: 2 },
+};
+
+function formatRupiah(angka){
+  const n = Number.isFinite(Number(angka)) ? Number(angka) : 0;
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+}
+
+function initFormatNumberInputs(){
+  document.querySelectorAll('input.format-number').forEach(input => {
+    const raw = (input.value || '').toString().replace(/\./g, '').replace(/[^0-9]/g, '');
+    input.value = raw ? raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+    input.addEventListener('input', function(){
+      const onlyDigits = this.value.toString().replace(/\./g, '').replace(/[^0-9]/g, '');
+      this.value = onlyDigits ? onlyDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+    });
+  });
+}
+
+function getNumericValue(id){
+  const el = document.getElementById(id);
+  if(!el) return 0;
+  const v = el.value.toString().replace(/\./g, '').trim();
+  return v === '' ? 0 : parseFloat(v);
+}
+
+// --- FUNGSI YANG DIPERBARUI ---
+function setLokasiDefaults() {
+    const lokasi = document.getElementById("lokasi").value;
+
+    if (!lokasi) {
+        resetCalculator();
+        return;
+    }
+
+    const data = lokasiDefaults[lokasi];
+    if (!data) return;
+
+    // Daftar semua ID input untuk dikelola
+    const allInputIds = [
+        'luasLahan', 'produktivitasGKP', 'indexTanam', 'biayaTenagaKerjaUmum',
+        'biayaLogistik', 'biayaSewa', 'biayaAdmin', 'biayaBenih', 'biayaUrea',
+        'biayaNpk', 'biayaTsp', 'biayaKcl', 'biayaPestisida', 'biayaTraktor',
+        'biayaPraTanam', 'biayaTanam', 'biayaPemeliharaan', 'biayaPenyemprotanPestisida',
+        'biayaPenyemprotanZpt', 'biayaPanen', 'hargaGKP', 'rendemenGKG',
+        'rendemenBeras', 'proporsiMedium', 'proporsiPremium', 'biayaProses',
+        'hargaMedium5', 'hargaMedium10', 'hargaMedium25', 'hargaPremium5',
+        'hargaPremium10', 'hargaPremium25'
+    ];
+
+    // Cek apakah ini prasetel provinsi (yang tidak memiliki data biaya)
+    const isProvincePreset = !('hargaGKP' in data);
+
+    // Pertama, reset semua input ke nilai default (0)
+    allInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Khusus untuk 3 input utama, biarkan nilai defaultnya
+            if (['luasLahan', 'produktivitasGKP', 'indexTanam'].includes(id)) {
+                 el.value = (id === 'indexTanam') ? 1 : 0;
+            } else if (el.type === 'number') {
+                el.value = 0;
+            } else if (el.classList.contains('format-number')) {
+                el.value = '0';
+            }
+        }
+    });
+
+    if (isProvincePreset) {
+        // Jika ini PROVINSI, hanya isi 3 data utama
+        document.getElementById('luasLahan').value = data.luasLahan;
+        document.getElementById('produktivitasGKP').value = data.produktivitasGKP;
+        document.getElementById('indexTanam').value = data.indexTanam;
+    } else {
+        // Jika ini prasetel LENGKAP (Sukabumi, dll.), isi semua data yang tersedia
+        for (const key in data) {
+            if (document.getElementById(key)) {
+                document.getElementById(key).value = data[key];
+            }
+        }
+    }
+
+    // Terakhir, format ulang semua angka agar mudah dibaca
+    initFormatNumberInputs();
+}
+
+
+function calculate(){
+  const luasLahan = parseFloat(document.getElementById('luasLahan').value) || 0;
+  const produktivitasGKP = parseFloat(document.getElementById('produktivitasGKP').value) || 0;
+  const indexTanam = parseFloat(document.getElementById('indexTanam').value) || 0;
+  
+  // Biaya Umum
+  const biayaUmum = getNumericValue('biayaTenagaKerjaUmum') + getNumericValue('biayaLogistik') + getNumericValue('biayaSewa') + getNumericValue('biayaAdmin');
+  
+  // Biaya Rinci
+  const biayaSaprodi = getNumericValue('biayaBenih') + getNumericValue('biayaUrea') + getNumericValue('biayaNpk') + getNumericValue('biayaPestisida') + getNumericValue('biayaTsp') + getNumericValue('biayaKcl');
+  const biayaTenagaKerja = getNumericValue('biayaTraktor') + getNumericValue('biayaPraTanam') + getNumericValue('biayaTanam') + getNumericValue('biayaPemeliharaan') + getNumericValue('biayaPenyemprotanPestisida') + getNumericValue('biayaPenyemprotanZpt') + getNumericValue('biayaPanen');
+  
+  const hargaGKP = getNumericValue('hargaGKP');
+
+  // Total biaya adalah gabungan dari biaya umum dan rinci
+  const totalBiaya_perHa = biayaUmum + biayaSaprodi + biayaTenagaKerja;
+  const produksiGKP_kg_perHa = produktivitasGKP * 1000;
+  const penerimaan_perHa = produksiGKP_kg_perHa * hargaGKP;
+  const keuntungan_perHa = penerimaan_perHa - totalBiaya_perHa;
+  const hppGKP_perKg = produksiGKP_kg_perHa ? (totalBiaya_perHa / produksiGKP_kg_perHa) : 0;
+  const rcRatio = totalBiaya_perHa ? (penerimaan_perHa / totalBiaya_perHa) : 0;
+
+  const totalProduksiGKP_tahunan = luasLahan * produktivitasGKP * indexTanam; // ton
+  totalBiayaOnFarm_tahunan = luasLahan * totalBiaya_perHa * indexTanam;
+  totalKeuntunganOnFarm_tahunan = luasLahan * keuntungan_perHa * indexTanam;
+  const totalPendapatan_tahunan = totalBiayaOnFarm_tahunan + totalKeuntunganOnFarm_tahunan;
+
+
+  document.getElementById('outputSection').style.display = 'block';
+  document.getElementById('millingSection').style.display = 'block';
+  document.getElementById('resetButton').style.display='block';
+
+  document.getElementById('outputPerHektar').innerHTML = `
+    <h3>Analisis per Hektar (per Siklus)</h3>
+    <p class="good">${formatRupiah(penerimaan_perHa)}
+        <span class="label">Potensi Pendapatan GKP</span>
+        <span class="calc-detail">(${produktivitasGKP} ton x ${formatRupiah(hargaGKP)}/kg)</span>
+    </p>
+    <p>${formatRupiah(totalBiaya_perHa)}
+        <span class="label">Total Biaya Budidaya</span>
+    </p>
+    <p class="good">${formatRupiah(keuntungan_perHa)}
+        <span class="label">Potensi Laba Petani</span>
+        <span class="calc-detail">(${formatRupiah(penerimaan_perHa)} - ${formatRupiah(totalBiaya_perHa)})</span>
+    </p>
+    <hr>
+    <p>${formatRupiah(hppGKP_perKg)} / kg<span class="label">HPP GKP per kg</span></p>
+    <p class="${rcRatio >= 1 ? 'good' : 'bad'}">${rcRatio.toFixed(2)}<span class="label">R/C Ratio< (jika GKP dijual @ ${formatRupiah(hargaGKP)})</span></p>
+  `;
+
+  document.getElementById('outputTotalCluster').innerHTML = `
+    <h3>Proyeksi Total Proyek (per Tahun)</h3>
+    <p>${(totalProduksiGKP_tahunan.toFixed(2))} ton
+        <span class="label">Target Produksi GKP Tahunan</span>
+        <span class="calc-detail">(${produktivitasGKP} ton/ha x ${luasLahan} ha)</span>
+    </p>
+    <p class="good">${formatRupiah(totalPendapatan_tahunan)}
+        <span class="label">Potensi Pendapatan GKP Tahunan</span>
+        <span class="calc-detail">(${formatRupiah(penerimaan_perHa)}/ha x ${luasLahan} ha)</span>
+    </p>
+    <p>${formatRupiah(totalBiayaOnFarm_tahunan)}
+        <span class="label">Total Biaya Budidaya Tahunan</span>
+        <span class="calc-detail">(${formatRupiah(totalBiaya_perHa)}/ha x ${luasLahan} ha)</span>
+    </p>
+    <p class="good">${formatRupiah(totalKeuntunganOnFarm_tahunan)}
+        <span class="label">Laba (jika semua GKP dijual)</span>
+        <span class="calc-detail">(${formatRupiah(totalPendapatan_tahunan)} - ${formatRupiah(totalBiayaOnFarm_tahunan)})</span>
+    </p>
+  `;
+
+  document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetCalculator(){
+  document.getElementById('farmCalculator').reset();
+  document.getElementById('lokasi').value = '';
+  const allInputs = document.querySelectorAll('#farmCalculator input, #millingSection input');
+    allInputs.forEach(input => {
+        if(input.type === 'text') input.value = '0';
+        if(input.type === 'number') {
+            input.value = (input.id === 'indexTanam') ? 1 : 0;
+        }
+    });
+  initFormatNumberInputs();
+  document.getElementById('outputSection').style.display='none';
+  document.getElementById('millingSection').style.display='none';
+  document.getElementById('resetButton').style.display='none';
+  document.getElementById('millingOutputContainer')?.style.setProperty('display','none');
+}
+
+function calculateMilling(){
+  const luasLahan = parseFloat(document.getElementById('luasLahan').value) || 0;
+  const produktivitasGKP = parseFloat(document.getElementById('produktivitasGKP').value) || 0;
+  const indexTanam = parseFloat(document.getElementById('indexTanam').value) || 0;
+  
+  if (luasLahan === 0 || produktivitasGKP === 0 || totalBiayaOnFarm_tahunan === 0) {
+      alert("Harap hitung kelayakan awal terlebih dahulu dengan menekan tombol 'Hitung Kelayakan Awal'.");
+      return;
+  }
+
+  const totalGKP_ton = luasLahan * produktivitasGKP * indexTanam;
+  const totalGKP_kg = totalGKP_ton * 1000;
+
+  const rendemenGKG = (parseFloat(document.getElementById('rendemenGKG').value) || 0) / 100;
+  const rendemenBeras = (parseFloat(document.getElementById('rendemenBeras').value) || 0) / 100;
+  const proporsiMedium = (parseFloat(document.getElementById('proporsiMedium').value) || 0) / 100;
+  const proporsiPremium = (parseFloat(document.getElementById('proporsiPremium').value) || 0) / 100;
+  const biayaProses = getNumericValue('biayaProses');
+
+  const hargaMedium5 = getNumericValue('hargaMedium5');
+  const hargaMedium10 = getNumericValue('hargaMedium10');
+  const hargaMedium25 = getNumericValue('hargaMedium25');
+  const hargaPremium5 = getNumericValue('hargaPremium5');
+  const hargaPremium10 = getNumericValue('hargaPremium10');
+  const hargaPremium25 = getNumericValue('hargaPremium25');
+
+  const totalGKG_ton = totalGKP_ton * rendemenGKG;
+  const totalBeras_ton = totalGKG_ton * rendemenBeras;
+  const totalBeras_kg = totalBeras_ton * 1000;
+
+  const totalBerasMedium_kg = totalBeras_kg * proporsiMedium;
+  const totalBerasPremium_kg = totalBeras_kg * proporsiPremium;
+  
+  const packMediumProp = { '5kg': 0.25, '10kg': 0.25, '25kg': 0.50 };
+  const packPremiumProp = { '5kg': 0.50, '10kg': 0.25, '25kg': 0.25 };
+
+  const karungMedium5 = (totalBerasMedium_kg * packMediumProp['5kg']) / 5;
+  const karungMedium10 = (totalBerasMedium_kg * packMediumProp['10kg']) / 10;
+  const karungMedium25 = (totalBerasMedium_kg * packMediumProp['25kg']) / 25;
+
+  const karungPremium5 = (totalBerasPremium_kg * packPremiumProp['5kg']) / 5;
+  const karungPremium10 = (totalBerasPremium_kg * packPremiumProp['10kg']) / 10;
+  const karungPremium25 = (totalBerasPremium_kg * packPremiumProp['25kg']) / 25;
+
+  const totalBiayaProses = totalGKP_kg * biayaProses;
+  const totalBiayaKeseluruhan = totalBiayaOnFarm_tahunan + totalBiayaProses;
+  const hppBeras_perKg = totalBeras_kg ? (totalBiayaKeseluruhan / totalBeras_kg) : 0;
+
+  const pendapatanMedium = (karungMedium5 * hargaMedium5) + (karungMedium10 * hargaMedium10) + (karungMedium25 * hargaMedium25);
+  const pendapatanPremium = (karungPremium5 * hargaPremium5) + (karungPremium10 * hargaPremium10) + (karungPremium25 * hargaPremium25);
+  const totalPendapatanBeras = pendapatanMedium + pendapatanPremium;
+  const keuntunganAkhir = totalPendapatanBeras - totalBiayaKeseluruhan;
+
+  document.getElementById('millingOutputContainer').style.display = 'block';
+
+  document.getElementById('outputMillingResult').innerHTML = `
+    <h3>📦 Hasil Produksi Beras (Tahunan)</h3>
+    <p>${(totalBeras_ton.toFixed(2))} ton
+        <span class="label">Total Beras Dihasilkan</span>
+        <span class="calc-detail">(${totalGKP_ton.toFixed(2)} ton GKP x ${(rendemenGKG * 100).toFixed(0)}% GKG x ${(rendemenBeras * 100).toFixed(0)}% Beras)</span>
+    </p><hr>
+    <p>${new Intl.NumberFormat('id-ID').format(totalBerasMedium_kg.toFixed(0))} kg
+        <span class="label">Beras Kualitas Medium</span>
+        <span class="calc-detail">(${(totalBeras_ton.toFixed(2))} ton x ${(proporsiMedium * 100)}%)</span>
+    </p>
+    <p>${new Intl.NumberFormat('id-ID').format(totalBerasPremium_kg.toFixed(0))} kg
+        <span class="label">Beras Kualitas Premium</span>
+        <span class="calc-detail">(${(totalBeras_ton.toFixed(2))} ton x ${(proporsiPremium * 100)}%)</span>
+    </p>
+  `;
+
+  document.getElementById('outputPackaging').innerHTML = `
+    <h3>🛍️ Rencana Pengemasan & Penjualan</h3>
+    <b>Kualitas Medium:</b>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungMedium5))} sak <span class="label"> @5kg | Total ${formatRupiah(Math.round(karungMedium5 * hargaMedium5))}</span></p>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungMedium10))} sak <span class="label"> @10kg | Total ${formatRupiah(Math.round(karungMedium10 * hargaMedium10))}</span></p>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungMedium25))} sak <span class="label"> @25kg | Total ${formatRupiah(Math.round(karungMedium25 * hargaMedium25))}</span></p>
+    <b>Kualitas Premium:</b>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungPremium5))} sak <span class="label"> @5kg | Total ${formatRupiah(Math.round(karungPremium5 * hargaPremium5))}</span></p>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungPremium10))} sak <span class="label"> @10kg | Total ${formatRupiah(Math.round(karungPremium10 * hargaPremium10))}</span></p>
+    <p>${new Intl.NumberFormat('id-ID').format(Math.round(karungPremium25))} sak <span class="label"> @25kg | Total ${formatRupiah(Math.round(karungPremium25 * hargaPremium25))}</span></p>
+  `;
+
+  document.getElementById('outputFinancialSummary').innerHTML = `
+    <h3>💰 Ringkasan Finansial Hulu-Hilir (Tahunan)</h3>
+    <p class="good">${formatRupiah(Math.round(totalPendapatanBeras))}<span class="label">Total Pendapatan dari Penjualan Beras</span></p>
+    <p class="bad">${formatRupiah(Math.round(totalBiayaKeseluruhan))}<span class="label">Total Biaya (Budidaya + Proses)</span></p>
+    <p class="good" style="font-size:20px">${formatRupiah(Math.round(keuntunganAkhir))}<span class="label" style="font-size:12px">ESTIMASI LABA BERSIH AKHIR</span></p>
+    <hr>
+    <p>${formatRupiah(hppBeras_perKg)}<span class="label">HPP Beras per Kg</span></p>
+    <p class="good" style="font-size:14px">+ ${formatRupiah(Math.round(keuntunganAkhir - totalKeuntunganOnFarm_tahunan))} <span class="label">Peningkatan Laba (dibanding jual GKP)</span></p>
+  `;
+
+  document.getElementById('millingOutputContainer').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  initFormatNumberInputs();
+});
+</script>
+</body>
+</html>
