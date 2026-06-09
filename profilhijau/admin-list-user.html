@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>List User - Green SME Admin</title>
+  <title>List User - Admin Profil UMKM Hijau Berdampak</title>
   <link rel="stylesheet" href="assets/admin-style.css">
 </head>
 <body>
@@ -59,21 +59,21 @@
     async function render() {
       const root = document.getElementById("root");
 
-      root.innerHTML = adminShell("List User Assessment", "users", `
+      root.innerHTML = adminShell("Daftar Profil UMKM Hijau Berdampak", "users", `
         <section class="hero card users-hero">
           <div class="hero-main">
-            <div class="eyebrow">Menu Admin • Response User</div>
-            <h1>List User Assessment</h1>
+            <div class="eyebrow">Menu Admin • Data Respon UMKM Hijau</div>
+            <h1>Daftar Profil UMKM Hijau Berdampak</h1>
             <p>
-              Daftar user dibuat dengan tampilan yang sama dengan halaman assessment utama: hero resmi,
-              kartu user, KPI, tabel, dan grafik ringkas.
+              Daftar hasil penilaian dan pengukuran Profil UMKM Hijau 
+              berdasarkan landasan Tier HIJAU dan akses pendampingan dalam transformasi dan bisnis lestari.
             </p>
           </div>
         </section>
 
         <section class="user-toolbar card">
           <div>
-            <h2>Daftar User</h2>
+            <h2>Data UMKM Hijau</h2>
             <p id="userShownCount">Memuat data user...</p>
           </div>
 
@@ -299,7 +299,7 @@
       return `
         <section class="user-toolbar card">
           <div>
-            <h2>Daftar User</h2>
+            <h2>Data UMKM Hijau</h2>
             <p>${filtered.length} data cocok. Rata-rata skor hasil filter: ${formatNumber(filteredStats.averageScore)}.</p>
           </div>
           <div class="user-search-box">
