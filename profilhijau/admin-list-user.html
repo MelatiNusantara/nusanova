@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List User - Green SME Admin</title>
+  <link rel="stylesheet" href="assets/admin-style.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="assets/admin-common.js"></script>
+  <script>
+    const USER_PAGE_SIZE = 10;
+
+    let cachedUsers = [];
+
+    let userListState = {
+      keyword: "",
+      fromDate: "",
+      toDate: "",
+      page: 1
+    };
+
+    function buildUserListQuery() {
+      const params = new URLSearchParams();
+
+      if (userListState.keyword) {
+        params.set("keyword", userListState.keyword);
+      }
+
+      if (userListState.fromDate) {
+        params.set("fromDate", userListState.fromDate);
+      }
+
+      if (userListState.toDate) {
+        params.set("toDate", userListState.toDate);
+      }
+
+      const query = params.toString();
+      return query ? `?${query}` : "";
+    }
+
+    function getUserInputDate(user) {
+      return user?.inputDate || user?.assessmentDate || user?.createdAt || user?.submittedAt || user?.updatedAt || null;
+    }
+
+    function formatUserInputDate(user) {
+      const value = getUserInputDate(user);
+      if (!value) return "-";
+
+      return formatDateTime(value);
+    }
+
+    if (requireAdmin()) {
+      render();
+    }
+
+    async function render() {
+      const root = document.getElementById("root");
+
+      root.innerHTML = adminShell("List User Assessment", "users", `
+        <section class="hero card users-hero">
+          <div class="hero-main">
+            <div class="eyebrow">Menu Admin • Response User</div>
+            <h1>List User Assessment</h1>
+            <p>
+              Daftar user dibuat dengan tampilan yang sama dengan halaman assessment utama: hero resmi,
+              kartu user, KPI, tabel, dan grafik ringkas.
+            </p>
+          </div>
+        </section>
+
+        <section class="user-toolbar card">
+          <div>
+            <h2>Daftar User</h2>
+            <p id="userShownCount">Memuat data user...</p>
+          </div>
+
+          <div class="user-search-box user-filter-box">
+            <input
+              id="userSearchInput"
+              type="search"
+              value="${escapeHtml(userListState.keyword)}"
+              placeholder="Tulis nama, usaha, kota, sektor, asesor..."
+            >
+
+            <input
+              id="userFromDate"
+              type="date"
+              value="${escapeHtml(userListState.fromDate)}"
+              aria-label="Tanggal mulai"
+            >
+
+            <input
+              id="userToDate"
+              type="date"
+              value="${escapeHtml(userListState.toDate)}"
+              aria-label="Tanggal akhir"
+            >
+
+            <button class="btn primary search-user-btn" id="userSearchBtn" type="button">Search</button>
+            <button class="btn secondary" id="userResetBtn" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section class="user-list" id="userList">
+          <div class="empty">Memuat data...</div>
+        </section>
+
+        <div id="userPaginationMount"></div>
+      `);
+
+      bindUserListEvents();
+
+      try {
+        const users = await adminFetch(`/api/admin/users${buildUserListQuery()}`);
+        cachedUsers = Array.isArray(users) ? users : [];
+        renderUserListOnly();
+      } catch (error) {
+        console.error(error);
+        const list = document.getElementById("userList");
+        if (list) {
+          list.innerHTML = `<div class="empty">Gagal memuat data user dari backend.</div>`;
+        }
+      }
+    }
+
+    function bindUserListEvents() {
+      const searchInput = document.getElementById("userSearchInput");
+      const fromDateInput = document.getElementById("userFromDate");
+      const toDateInput = document.getElementById("userToDate");
+      const searchBtn = document.getElementById("userSearchBtn");
+      const resetBtn = document.getElementById("userResetBtn");
+
+      const doSearch = () => {
+        userListState.keyword = String(searchInput?.value || "").trim();
+        userListState.fromDate = fromDateInput?.value || "";
+        userListState.toDate = toDateInput?.value || "";
+        userListState.page = 1;
+        render();
+      };
+
+      searchBtn?.addEventListener("click", doSearch);
+
+      searchInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      fromDateInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      toDateInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      resetBtn?.addEventListener("click", () => {
+        userListState = {
+          keyword: "",
+          fromDate: "",
+          toDate: "",
+          page: 1
+        };
+
+        render();
+      });
+    }
+
+    function renderUserListOnly() {
+      const list = document.getElementById("userList");
+      const counter = document.getElementById("userShownCount");
+      const paginationMount = document.getElementById("userPaginationMount");
+
+      if (!list) return;
+
+      const users = cachedUsers || [];
+      const totalRows = users.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / USER_PAGE_SIZE));
+
+      userListState.page = Math.min(Math.max(1, userListState.page || 1), totalPages);
+
+      const startIndex = (userListState.page - 1) * USER_PAGE_SIZE;
+      const pageRows = users.slice(startIndex, startIndex + USER_PAGE_SIZE);
+      const endIndex = startIndex + pageRows.length;
+
+      if (counter) {
+        counter.textContent = totalRows
+          ? `${totalRows} data cocok. Menampilkan ${startIndex + 1}-${endIndex}.`
+          : "Tidak ada data cocok.";
+      }
+
+      if (!pageRows.length) {
+        list.innerHTML = `<div class="empty">Tidak ada data user untuk filter ini.</div>`;
+      } else {
+        list.innerHTML = pageRows.map(user => renderUserCard(user)).join("");
+      }
+
+      if (paginationMount) {
+        paginationMount.innerHTML = renderUserPagination(totalRows, totalPages, startIndex, endIndex);
+      }
+
+      document.querySelectorAll("[data-user-detail]").forEach(button => {
+        button.addEventListener("click", () => {
+          const userId = button.dataset.userDetail;
+          renderUserDashboard(userId);
+        });
+      });
+
+      bindUserPagination();
+    }
+
+    function renderUserPagination(totalRows, totalPages, startIndex, endIndex) {
+      if (!totalRows || totalPages <= 1) {
+        return "";
+      }
+
+      return `
+        <div class="admin-pagination user-pagination card">
+          <button
+            class="btn secondary"
+            type="button"
+            data-user-page="${userListState.page - 1}"
+            ${userListState.page <= 1 ? "disabled" : ""}
+          >
+            ← Sebelumnya
+          </button>
+
+          <span>
+            Data ${startIndex + 1}-${endIndex} dari ${totalRows}
+            • Halaman ${userListState.page} / ${totalPages}
+          </span>
+
+          <button
+            class="btn secondary"
+            type="button"
+            data-user-page="${userListState.page + 1}"
+            ${userListState.page >= totalPages ? "disabled" : ""}
+          >
+            Berikutnya →
+          </button>
+        </div>
+      `;
+    }
+
+    function bindUserPagination() {
+      document.querySelectorAll("[data-user-page]").forEach(button => {
+        button.addEventListener("click", () => {
+          const nextPage = Number(button.dataset.userPage);
+
+          if (!Number.isFinite(nextPage) || nextPage < 1) return;
+
+          userListState.page = nextPage;
+          renderUserListOnly();
+
+          const toolbar = document.querySelector(".user-toolbar");
+          if (toolbar) {
+            toolbar.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      });
+    }
+
+    function filterUsers(users, keyword) {
+      const query = normalizeText(keyword);
+      if (!query) return users;
+
+      return users.filter(user => {
+        const haystack = normalizeText([
+          user.id,
+          getBusinessName(user),
+          getRespondentName(user),
+          getasesorName(user),
+          user.whatsappNumber,
+          user.city,
+          user.province,
+          user.sector,
+          user.tier,
+          user.status
+        ].join(" "));
+        return haystack.includes(query);
+      });
+    }
+
+    function renderUsers(users, keyword) {
+      const filtered = filterUsers(users || [], keyword);
+      const stats = summarizeUsers(users || []);
+      const filteredStats = summarizeUsers(filtered);
+
+      return `
+        <section class="user-toolbar card">
+          <div>
+            <h2>Daftar User</h2>
+            <p>${filtered.length} data cocok. Rata-rata skor hasil filter: ${formatNumber(filteredStats.averageScore)}.</p>
+          </div>
+          <div class="user-search-box">
+            <input id="keywordInput" type="search" value="${escapeHtml(keyword)}" placeholder="Tulis nama, usaha, kota, sektor, asesor...">
+            <button class="btn primary" id="searchBtn" type="button">Search</button>
+          </div>
+        </section>
+
+        ${filtered.length ? `
+          <section class="user-list" id="userList">
+            ${filtered.map(user => renderUserCard(user)).join("")}
+          </section>
+        ` : `<section class="card empty">Belum ada data yang cocok dengan pencarian.</section>`}
+
+        <section class="admin-chart-grid">
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Distribusi Tier</h2><p>Ringkasan tier dari data user yang sedang ditampilkan.</p></div>
+              <select id="listTierChartType" class="chart-select">
+                <option value="bar">Bar</option>
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="listTierChart" class="admin-chart" height="260"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Top Sektor Usaha</h2><p>Sektor usaha terbanyak dari data user.</p></div>
+              <select id="listSectorChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="listSectorChart" class="admin-chart" height="260"></canvas>
+          </article>
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Tabel Detail User</h2><p>Versi tabel untuk admin yang perlu melihat data lebih padat.</p></div>
+          </div>
+          ${renderTable(filtered)}
+        </section>
+      `;
+    }
+
+    function bindSearch(keyword) {
+      const input = document.getElementById("keywordInput");
+      const button = document.getElementById("searchBtn");
+      const doSearch = () => render(input ? input.value : keyword);
+
+      button?.addEventListener("click", doSearch);
+      input?.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          doSearch();
+        }
+      });
+    }
+
+    function bindListCharts(users, keyword) {
+      ["listTierChartType", "listSectorChartType"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", () => drawListCharts(users, keyword));
+      });
+    }
+
+    function drawListCharts(users, keyword) {
+      const filtered = filterUsers(users || [], keyword);
+      const tierData = countBy(filtered, user => user.tier || "Tidak diisi");
+      const sectorData = compactChartData(countBy(filtered, user => user.sector || "Tidak diisi"), 8);
+
+      drawSimpleChart("listTierChart", tierData, document.getElementById("listTierChartType")?.value || "horizontalBar", { maxItems: 8 });
+      drawSimpleChart("listSectorChart", sectorData, document.getElementById("listSectorChartType")?.value || "horizontalBar", { maxItems: 8 });
+    }
+
+    function renderUserCard(user) {
+      const businessName = getBusinessName(user);
+      const respondentName = getRespondentName(user);
+      const asesorName = getasesorName(user);
+      const location = getLocation(user);
+      const score = toNumber(user.totalScore || user.score || user.result?.total);
+      const percent = getScorePercent(score);
+      const statusClass = getStatusClass(user.status);
+      const initial = (businessName || respondentName || "U").trim().charAt(0).toUpperCase();
+
+      return `
+        <article class="user-card card">
+          <div class="user-card-main">
+            <div class="user-avatar">${escapeHtml(initial)}</div>
+            <div>
+              <span class="row-label">User ID ${escapeHtml(user.id)}</span>
+              <h3>${escapeHtml(businessName)}</h3>
+              <p>${escapeHtml(respondentName)} • ${escapeHtml(location)}</p>
+              <div class="user-tags">
+                <span>${escapeHtml(user.businessScale || "-")}</span>
+                <span>${escapeHtml(user.sector || "-")}</span>
+                <span>Input: ${escapeHtml(formatUserInputDate(user))}</span>
+                <span>${escapeHtml(user.status || "-")}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-score-box">
+            <strong>${formatNumber(score)}</strong>
+            <span>/1000</span>
+            <small>${escapeHtml(user.tier || "-")}</small>
+            <div class="mini-bar"><i style="width:${percent}%"></i></div>
+          </div>
+
+          <a class="btn primary" href="admin-user-dashboard.html?id=${encodeURIComponent(user.id)}">Lihat Dashboard</a>
+        </article>
+      `;
+    }
+
+    function renderTable(users) {
+      if (!users.length) {
+        return `<div class="empty">Belum ada data SUBMITTED di database.</div>`;
+      }
+
+      return `
+        <div class="table-scroll tall-table">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usaha</th>
+                <th>Responden</th>
+                <th>Lokasi</th>
+                <th>Sektor</th>
+                <th>Skor</th>
+                <th>Tier</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(user => `
+                <tr>
+                  <td>${escapeHtml(user.id)}</td>
+                  <td><strong>${escapeHtml(getBusinessName(user))}</strong><br><small>${escapeHtml(getasesorName(user))}</small></td>
+                  <td>${escapeHtml(getRespondentName(user))}<br><small>${escapeHtml(user.whatsappNumber || "-")}</small></td>
+                  <td>${escapeHtml(getLocation(user))}</td>
+                  <td>${escapeHtml(user.sector || "-")}</td>
+                  <td class="score">${formatNumber(user.totalScore || user.score || user.result?.total)}</td>
+                  <td><span class="badge">${escapeHtml(user.tier || "-")}</span></td>
+                  <td><span class="status-badge ${getStatusClass(user.status)}">${escapeHtml(user.status || "-")}</span></td>
+                  <td><a class="btn primary" href="admin-user-dashboard.html?id=${encodeURIComponent(user.id)}">Detail</a></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

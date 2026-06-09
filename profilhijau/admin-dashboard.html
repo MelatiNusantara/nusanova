@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Admin - Green SME</title>
+  <link rel="stylesheet" href="assets/admin-style.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="assets/admin-common.js"></script>
+  <script>
+    const DASHBOARD_PAGE_SIZE = 10;
+    let dashboardState = {
+      summary: {},
+      users: [],
+      assessments: [],
+      page: 1,
+      filters: { fromDate: "", toDate: "" }
+    };
+
+    if (requireAdmin()) {
+      render();
+    }
+
+    async function render() {
+      const root = document.getElementById("root");
+      const currentFilters = {
+        fromDate: dashboardState.filters?.fromDate || "",
+        toDate: dashboardState.filters?.toDate || ""
+      };
+      const currentPage = dashboardState.page || 1;
+      const dashboardQuery = buildDashboardQuery(currentFilters);
+      const commonQuery = dashboardQuery ? `?${dashboardQuery}` : "";
+      const assessmentQuery = dashboardQuery ? `?status=SUBMITTED&${dashboardQuery}` : "?status=SUBMITTED";
+
+      root.innerHTML = adminShell("Dashboard Admin", "dashboard", `
+        <section class="hero card admin-hero">
+          <div class="hero-main">
+            <div class="eyebrow">Menu Admin • Rekap Nasional</div>
+            <h1>Dashboard Admin</h1>
+            <p>Memuat rekap user, grafik tier, tahun assessment, provinsi, sektor usaha, status, dan top skor.</p>
+          </div>
+        </section>
+        <section id="mount" class="empty">Memuat dashboard...</section>
+      `);
+
+      const [summaryResult, usersResult, assessmentsResult] = await Promise.allSettled([
+        adminFetch(`/api/admin/dashboard/summary${commonQuery}`),
+        adminFetch(`/api/admin/users${commonQuery}`),
+        adminFetch(`/api/admin/assessments${assessmentQuery}`)
+      ]);
+
+      if (summaryResult.status === "rejected" && usersResult.status === "rejected") {
+        document.getElementById("mount").outerHTML = `
+          <section class="card empty">
+            <strong>Gagal memuat dashboard.</strong>
+            <p>${escapeHtml(summaryResult.reason?.message || usersResult.reason?.message || "Request gagal.")}</p>
+          </section>
+        `;
+        return;
+      }
+
+      dashboardState = {
+        summary: summaryResult.status === "fulfilled" ? (summaryResult.value || {}) : {},
+        users: usersResult.status === "fulfilled" ? (usersResult.value || []) : [],
+        assessments: assessmentsResult.status === "fulfilled" ? (assessmentsResult.value || []) : [],
+        page: currentPage,
+        filters: currentFilters
+      };
+
+      document.getElementById("mount").outerHTML = renderDashboard(dashboardState.summary, dashboardState.users);
+      bindDashboardFilters();
+      bindDashboardCharts();
+      bindDashboardPagination();
+      drawDashboardCharts();
+    }
+
+    function buildDashboardQuery(filters) {
+      const params = new URLSearchParams();
+
+      if (filters?.fromDate) params.set("fromDate", filters.fromDate);
+      if (filters?.toDate) params.set("toDate", filters.toDate);
+
+      return params.toString();
+    }
+
+    function getInputDate(user) {
+      return user.inputDate || user.assessmentDate || user.createdAt || user.submittedAt || user.updatedAt || "-";
+    }
+
+    function bindDashboardFilters() {
+      const fromInput = document.getElementById("dashboardFromDate");
+      const toInput = document.getElementById("dashboardToDate");
+
+      const doFilter = () => {
+        dashboardState.filters = {
+          fromDate: fromInput?.value || "",
+          toDate: toInput?.value || ""
+        };
+        dashboardState.page = 1;
+        render();
+      };
+
+      document.getElementById("dashboardFilterBtn")?.addEventListener("click", doFilter);
+
+      [fromInput, toInput].forEach(input => {
+        input?.addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            doFilter();
+          }
+        });
+      });
+
+      document.getElementById("dashboardResetFilterBtn")?.addEventListener("click", () => {
+        dashboardState.filters = { fromDate: "", toDate: "" };
+        dashboardState.page = 1;
+        render();
+      });
+    }
+
+    function bindDashboardPagination() {
+      document.querySelectorAll("[data-dashboard-page]").forEach(button => {
+        button.addEventListener("click", () => {
+          dashboardState.page = Number(button.dataset.dashboardPage) || 1;
+
+          const target = document.getElementById("allUsersTableMount");
+          if (target) {
+            target.innerHTML = renderAllUsersTable(dashboardState.users || []);
+            bindDashboardPagination();
+          }
+        });
+      });
+    }
+
+    function buildDashboardStats(summary, users) {
+      const listStats = summarizeUsers(users || []);
+      const topUsers = (summary.topUsers && summary.topUsers.length ? summary.topUsers : (users || []).slice())
+        .sort((a, b) => toNumber(b.totalScore || b.score || b.result?.total) - toNumber(a.totalScore || a.score || a.result?.total))
+        .slice(0, 10);
+      const highest = topUsers[0] || null;
+      const provinceData = countBy(users || [], user => user.province || "Tidak diisi");
+      const sectorData = countBy(users || [], user => user.sector || "Tidak diisi");
+      const statusData = countBy(users || [], user => user.status || "Tidak diisi");
+
+      return {
+        totalUser: summary.totalUser ?? listStats.totalUser,
+        averageScore: summary.averageScore ?? listStats.averageScore,
+        tier3Plus: summary.tier3Plus ?? listStats.tier3Plus,
+        disqualified: summary.disqualified ?? listStats.disqualified,
+        topUsers,
+        highest,
+        tierData: objectToChartData(summary.tierSummary || {}).length ? objectToChartData(summary.tierSummary || {}) : countBy(users || [], user => user.tier || "Tidak diisi"),
+        yearData: objectToChartData(summary.yearSummary || {}).length ? objectToChartData(summary.yearSummary || {}) : buildYearData(users || []),
+        provinceData,
+        sectorData,
+        statusData,
+        topScoreData: topUsers.map(user => ({
+          label: getBusinessName(user),
+          value: toNumber(user.totalScore || user.score || user.result?.total)
+        })).filter(item => item.value > 0)
+      };
+    }
+
+    function buildYearData(users) {
+      return countBy(users, user => {
+        const value = user.submittedAt || user.createdAt || user.assessmentDate || user.updatedAt || "";
+        const match = String(value).match(/\d{4}/);
+        return match ? match[0] : "Tidak diisi";
+      });
+    }
+
+    function renderDashboard(summary, users) {
+      const stats = buildDashboardStats(summary, users);
+      const topProvince = stats.provinceData[0]?.label || "-";
+      const highestScore = stats.highest ? toNumber(stats.highest.totalScore || stats.highest.score || stats.highest.result?.total) : 0;
+      const highestName = stats.highest ? getBusinessName(stats.highest) : "-";
+
+      return `
+        <section class="hero card admin-hero">
+          <div class="admin-kpi-grid">
+            <div class="admin-kpi"><span>Total User</span><strong>${formatNumber(stats.totalUser)}</strong><small>Response submitted</small></div>
+            <div class="admin-kpi"><span>Rata-rata Skor</span><strong>${formatNumber(stats.averageScore)}</strong><small>dari 1.000</small></div>
+            <div class="admin-kpi"><span>Tier 3+</span><strong>${formatNumber(stats.tier3Plus)}</strong><small>UMKM Hijau ke atas</small></div>
+            <div class="admin-kpi"><span>Diskualifikasi</span><strong>${formatNumber(stats.disqualified)}</strong><small>Perlu perhatian</small></div>
+            <div class="admin-kpi"><span>Skor Tertinggi</span><strong>${formatNumber(highestScore)}</strong><small>${escapeHtml(highestName)}</small></div>
+            <div class="admin-kpi"><span>Top Provinsi</span><strong>${escapeHtml(topProvince)}</strong><small>Data terbanyak</small></div>
+          </div>
+        </section>
+
+        <section class="user-toolbar card admin-filter-toolbar">
+          <div>
+            <h2>Filter Tanggal Input</h2>
+            <p>Filter berdasarkan tanggal data pertama kali masuk/disimpan di database.</p>
+          </div>
+          <div class="user-search-box date-filter-box">
+            <input id="dashboardFromDate" type="date" value="${escapeHtml(dashboardState.filters?.fromDate || "")}" aria-label="Tanggal mulai">
+            <input id="dashboardToDate" type="date" value="${escapeHtml(dashboardState.filters?.toDate || "")}" aria-label="Tanggal akhir">
+            <button class="btn primary" id="dashboardFilterBtn" type="button">Filter</button>
+            <button class="btn secondary" id="dashboardResetFilterBtn" type="button">Reset</button>
+          </div>
+        </section>
+
+        <section class="admin-chart-grid">
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Distribusi Tier</h2><p>Jumlah user pada setiap tier assessment.</p></div>
+              <select id="tierChartType" class="chart-select">
+                <option value="bar">Bar</option>
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="tierChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Top Provinsi</h2><p>Persebaran lokasi user dari database.</p></div>
+              <select id="provinceChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="provinceChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Top Sektor Usaha</h2><p>Sektor usaha terbanyak dari user.</p></div>
+              <select id="sectorChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="sectorChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Top Skor User</h2><p>User dengan skor assessment tertinggi.</p></div>
+              <select id="topScoreChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+              </select>
+            </div>
+            <canvas id="topScoreChart" class="admin-chart" height="270"></canvas>
+          </article>
+        </section>
+
+
+        <section class="admin-panel card question-panel">
+          <div class="admin-panel-head question-head">
+            <div>
+              <h2>Grafik Jawaban User / Company</h2>
+              <p>Fokus pada data usaha dan jawaban assessment. Data asesor dipisahkan agar tidak membingungkan.</p>
+            </div>
+            <div class="question-controls">
+              <select id="questionSelect" class="chart-select wide-select">
+                ${adminMainQuestions().map(q => `<option value="${q.id}" ${q.id === "Q20" ? "selected" : ""}>${q.no}. ${escapeHtml(q.title)}</option>`).join("")}
+              </select>
+              <select id="questionChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+          </div>
+          <canvas id="questionChart" class="admin-chart question-chart" height="300"></canvas>
+          <div id="questionDistributionTable"></div>
+        </section>
+
+        <section class="admin-table-grid">
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Rekap Tier</h2><p>Ringkasan angka dan persentase per tier.</p></div>
+            </div>
+            ${renderSummaryTable(stats.tierData, "Tier")}
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Rekap Tahun</h2><p>Ringkasan angka dan persentase per tahun.</p></div>
+            </div>
+            ${renderSummaryTable(stats.yearData, "Tahun")}
+          </article>
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Top User</h2><p>User dengan skor tertinggi, diurutkan dari nilai terbesar.</p></div>
+          </div>
+          ${renderTopUsers(stats.topUsers)}
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Data Semua User</h2><p>Tabel rekap skor user untuk kebutuhan pengecekan admin.</p></div>
+          </div>
+          ${renderAllUsersTable(users || [])}
+        </section>
+      `;
+    }
+
+    function bindDashboardCharts() {
+      ["tierChartType", "yearChartType", "provinceChartType", "sectorChartType", "statusChartType", "topScoreChartType"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", drawDashboardCharts);
+      });
+
+      document.getElementById("questionSelect")?.addEventListener("change", drawQuestionDashboard);
+      document.getElementById("questionChartType")?.addEventListener("change", drawQuestionDashboard);
+    }
+
+    function drawDashboardCharts() {
+      const stats = buildDashboardStats(dashboardState.summary, dashboardState.users);
+      drawSimpleChart("tierChart", stats.tierData, document.getElementById("tierChartType")?.value || "horizontalBar", { maxItems: 8 });
+      drawSimpleChart("yearChart", stats.yearData, document.getElementById("yearChartType")?.value || "bar", { maxItems: 8 });
+      drawSimpleChart("provinceChart", compactChartData(stats.provinceData, 8), document.getElementById("provinceChartType")?.value || "horizontalBar", { maxItems: 8 });
+      drawSimpleChart("sectorChart", compactChartData(stats.sectorData, 8), document.getElementById("sectorChartType")?.value || "horizontalBar", { maxItems: 8 });
+      drawSimpleChart("statusChart", compactChartData(stats.statusData, 8), document.getElementById("statusChartType")?.value || "doughnut", { maxItems: 8 });
+      drawSimpleChart("topScoreChart", compactChartData(stats.topScoreData, 10), document.getElementById("topScoreChartType")?.value || "horizontalBar", { maxItems: 10 });
+      drawQuestionDashboard();
+    }
+
+    function drawQuestionDashboard() {
+      const qid = document.getElementById("questionSelect")?.value || "Q20";
+      const type = document.getElementById("questionChartType")?.value || "horizontalBar";
+      const rows = getQuestionDistributionFromAssessments(dashboardState.assessments || [], qid);
+
+      drawSimpleChart("questionChart", compactChartData(rows, 10), type, { maxItems: 10 });
+
+      const target = document.getElementById("questionDistributionTable");
+      if (target) {
+        target.innerHTML = renderQuestionDistributionTableHtml(rows);
+      }
+    }
+
+    function renderSummaryTable(items, labelTitle) {
+      const rows = items || [];
+      const total = rows.reduce((sum, item) => sum + toNumber(item.value), 0);
+
+      if (!rows.length) return `<div class="empty">Belum ada data.</div>`;
+
+      return `
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead><tr><th>${escapeHtml(labelTitle)}</th><th>Jumlah</th><th>Persentase</th></tr></thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td>${escapeHtml(row.label)}</td>
+                  <td><strong>${formatNumber(row.value)}</strong></td>
+                  <td>${total ? Math.round(toNumber(row.value) / total * 100) : 0}%</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderTopUsers(users) {
+      if (!users || !users.length) return `<div class="empty">Belum ada data.</div>`;
+
+      return `
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Usaha</th>
+                <th>Responden</th>
+                <th>Lokasi</th>
+                <th>Skor</th>
+                <th>Tier</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(user => `
+                <tr>
+                  <td><strong>${escapeHtml(getBusinessName(user))}</strong></td>
+                  <td>${escapeHtml(getRespondentName(user))}</td>
+                  <td>${escapeHtml(getLocation(user))}</td>
+                  <td class="score">${formatNumber(user.totalScore || user.score || user.result?.total)}</td>
+                  <td><span class="badge">${escapeHtml(user.tier || user.result?.tierLabel || "-")}</span></td>
+                  <td>${user.id ? `<a class="btn primary" href="admin-user-dashboard.html?id=${encodeURIComponent(user.id)}">Detail</a>` : "-"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderAllUsersTable(users) {
+      if (!users || !users.length) return `<div class="empty">Data semua user tidak tersedia dari API list user.</div>`;
+
+      const sorted = users.slice().sort((a, b) => {
+        const dateA = String(getInputDate(a));
+        const dateB = String(getInputDate(b));
+        return dateB.localeCompare(dateA);
+      });
+
+      const totalRows = sorted.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / DASHBOARD_PAGE_SIZE));
+      const currentPage = Math.min(Math.max(1, dashboardState.page || 1), totalPages);
+      dashboardState.page = currentPage;
+
+      const startIndex = (currentPage - 1) * DASHBOARD_PAGE_SIZE;
+      const pageRows = sorted.slice(startIndex, startIndex + DASHBOARD_PAGE_SIZE);
+      const endIndex = startIndex + pageRows.length;
+
+      return `
+        <div class="table-scroll tall-table">
+          <table class="admin-table user-summary-table">
+            <thead>
+              <tr>
+                <th>Usaha</th>
+                <th>Nama</th>
+                <th>Kota</th>
+                <th>Provinsi</th>
+                <th>Sektor</th>
+                <th>Tanggal Input</th>
+                <th>Skor</th>
+                <th>Tier</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pageRows.map(user => `
+                <tr>
+                  <td><strong>${escapeHtml(getBusinessName(user))}</strong></td>
+                  <td>${escapeHtml(getRespondentName(user))}</td>
+                  <td>${escapeHtml(user.city || "-")}</td>
+                  <td>${escapeHtml(user.province || "-")}</td>
+                  <td>${escapeHtml(user.sector || "-")}</td>
+                  <td>${escapeHtml(formatDateTime(getInputDate(user)))}</td>
+                  <td class="score">${formatNumber(user.totalScore || user.score || user.result?.total)}</td>
+                  <td>${escapeHtml(user.tier || "-")}</td>
+                  <td><span class="status-badge ${getStatusClass(user.status)}">${escapeHtml(user.status || "-")}</span></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-pagination">
+          <button class="btn secondary" type="button" data-dashboard-page="${currentPage - 1}" ${currentPage <= 1 ? "disabled" : ""}>← Sebelumnya</button>
+          <span>Data ${startIndex + 1}-${endIndex} dari ${totalRows} • Halaman ${currentPage} / ${totalPages}</span>
+          <button class="btn secondary" type="button" data-dashboard-page="${currentPage + 1}" ${currentPage >= totalPages ? "disabled" : ""}>Berikutnya →</button>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
