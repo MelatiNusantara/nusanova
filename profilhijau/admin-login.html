@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login - Green SME</title>
+  <link rel="stylesheet" href="assets/admin-style.css">
+</head>
+<body>
+  <main class="login-page">
+    <section class="card login-card">
+      <h1>Admin Login</h1>
+      <p>Masukkan admin key untuk membuka List User dan Dashboard Admin.</p>
+
+      <label for="adminKey">Admin Key</label>
+      <input id="adminKey" type="password" placeholder="Masukkan admin key">
+
+      <button class="btn primary" id="loginBtn" type="button">Masuk Admin</button>
+
+      <p class="error" id="errorText"></p>
+    </section>
+  </main>
+
+  <script src="assets/admin-common.js"></script>
+  <script>
+    const input = document.getElementById("adminKey");
+    const errorText = document.getElementById("errorText");
+
+    async function login() {
+      const key = input.value.trim();
+
+      if (!key) {
+        errorText.textContent = "Admin key wajib diisi.";
+        return;
+      }
+
+      errorText.textContent = "";
+
+      try {
+        const response = await fetch(API_BASE + "/api/admin-auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Key": key
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Admin key salah.");
+        }
+
+        setAdminKey(key);
+        window.location.href = "admin-list-user.html";
+      } catch (error) {
+        errorText.textContent = error.message;
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", login);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detail User - Green SME Admin</title>
+  <link rel="stylesheet" href="assets/admin-style.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="assets/admin-common.js"></script>
+  <script>
+    let currentDetail = null;
+
+    if (requireAdmin()) {
+      render();
+    }
+
+    async function render() {
+      const root = document.getElementById("root");
+      const id = new URLSearchParams(window.location.search).get("id");
+
+      if (!id) {
+        root.innerHTML = adminShell("Detail User", "users", `
+          <section class="card empty">ID user tidak ditemukan.</section>
+        `);
+        return;
+      }
+
+      root.innerHTML = adminShell("Detail User Dashboard", "users", `
+        <section class="hero card detail-hero">
+          <div class="hero-main">
+            <div class="eyebrow">Detail User • Dashboard</div>
+            <h1>Dashboard User</h1>
+            <p>Memuat skor, tier, profil, grafik komponen, dan jawaban lengkap user.</p>
+            <span class="trust-badge">Mengambil data user...</span>
+          </div>
+        </section>
+        <section id="mount" class="empty">Memuat detail user...</section>
+      `);
+
+      try {
+        currentDetail = await adminFetch("/api/admin/users/" + encodeURIComponent(id) + "/dashboard");
+        document.getElementById("mount").outerHTML = renderDetail(currentDetail);
+        bindDetailCharts();
+        drawDetailCharts();
+      } catch (error) {
+        document.getElementById("mount").outerHTML = `
+          <section class="card empty">
+            <strong>Gagal memuat detail.</strong>
+            <p>${escapeHtml(error.message)}</p>
+          </section>
+        `;
+      }
+    }
+
+    function normalizeSections(sections) {
+      if (Array.isArray(sections)) {
+        return sections.map(section => ({
+          title: section.title || section.name || section.label || "-",
+          score: toNumber(section.score || section.value),
+          max: toNumber(section.max || section.maximum || section.totalMax, 1)
+        }));
+      }
+
+      if (sections && typeof sections === "object") {
+        return Object.entries(sections).map(([key, section]) => ({
+          title: section.title || section.name || section.label || key,
+          score: toNumber(section.score || section.value),
+          max: toNumber(section.max || section.maximum || section.totalMax, 1)
+        }));
+      }
+
+      return [];
+    }
+
+    function renderDetail(data) {
+      const scores = data.scores || {};
+      const sections = normalizeScoreSectionsForIndexLook(scores);
+      const answers = data.answers || {};
+      const questionRows = getQuestionScoreRowsFromScores(scores);
+      const totalScore = toNumber(data.totalScore || data.score || scores.total);
+      const scorePercent = getScorePercent(totalScore);
+      const completeCount = toNumber(data.completeCount || data.answeredCount);
+      const totalQuestion = toNumber(data.totalQuestion || data.questionCount, 64);
+      const statusClass = getStatusClass(data.status);
+      const tierLabel = data.tier || data.tierLabel || scores.tierLabel || "-";
+      const recommendation = scores.recommendation || "Rekomendasi belum tersedia dari data scoring.";
+      const weakest = getLowestSections(sections);
+      const esgCards = getDetailESG(scores);
+
+      return `
+        <section class="hero card detail-hero index-like-detail-hero">
+          <a class="btn secondary" href="admin-list-user.html" style="position:relative;z-index:2;margin-bottom:18px;width:fit-content;">← Kembali ke List User</a>
+          <div class="hero-main">
+            <div class="eyebrow">Detail User • Dashboard Assessment</div>
+            <h1>${escapeHtml(data.businessName || data.business || "Detail User")}</h1>
+            <p>${escapeHtml(data.respondentName || data.name || "-")} • ${escapeHtml(getLocation(data))}</p>
+            <span class="trust-badge">${escapeHtml(tierLabel)}</span>
+          </div>
+
+          <div class="detail-info-grid">
+            <div><span>Asesor</span><strong>${escapeHtml(data.assessorName || data.asesorName || data.asesor || "-")}</strong></div>
+            <div><span>WhatsApp</span><strong>${escapeHtml(data.whatsappNumber || data.whatsapp || "-")}</strong></div>
+            <div><span>Sektor</span><strong>${escapeHtml(data.sector || "-")}</strong></div>
+            <div><span>Status</span><strong><span class="status-badge ${statusClass}">${escapeHtml(data.status || "-")}</span></strong></div>
+          </div>
+        </section>
+
+        <section class="result-summary-grid">
+          <article class="card score-ring-card">
+            <div class="score-meter" style="--pct:${scorePercent}">
+              <div>
+                <strong>${formatNumber(totalScore)}</strong>
+                <span>/ 1000</span>
+              </div>
+            </div>
+            <div>
+              <h2>Total Score</h2>
+              <p>Hasil dihitung dari data assessment yang tersimpan di database.</p>
+            </div>
+          </article>
+
+          <article class="card tier-result-card">
+            <span class="tier-num">${escapeHtml(tierLabel)}</span>
+            <h2>Hasil Tier</h2>
+            <p>${escapeHtml(recommendation)}</p>
+          </article>
+
+          <article class="card profile-card">
+            <h2>Kelengkapan Data</h2>
+            <p><span>Terisi</span><strong>${formatNumber(completeCount)} / ${formatNumber(totalQuestion)} pertanyaan</strong></p>
+            <div class="bar"><i style="width:${Math.max(0, Math.min(100, Math.round((completeCount / Math.max(totalQuestion, 1)) * 100)))}%"></i></div>
+            <p style="margin-top:14px;"><span>Submitted At</span><strong>${escapeHtml(formatDateTime(data.submittedAt || data.createdAt || data.updatedAt))}</strong></p>
+          </article>
+        </section>
+
+        <section class="admin-panel card score-breakdown-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Ringkasan Skor per Bagian</h2>
+              <p>Bagian ini dibuat sama rasa dengan dashboard hasil assessment di index.html.</p>
+            </div>
+          </div>
+          ${renderIndexLikeSectionTable(sections)}
+        </section>
+
+        <section class="esg-grid">
+          ${esgCards.map(card => {
+            const percent = Math.max(0, Math.min(100, Math.round((card.score / Math.max(card.max, 1)) * 100)));
+            return `
+              <article class="card esg-card">
+                <span class="esg-icon">${escapeHtml(card.code)}</span>
+                <h3>${escapeHtml(card.name)}</h3>
+                <strong>${formatNumber(card.score)}/${formatNumber(card.max)}</strong>
+                <div class="bar"><i style="width:${percent}%"></i></div>
+                <small>${percent}%</small>
+              </article>
+            `;
+          }).join("")}
+        </section>
+
+        <section class="note-grid">
+          <article class="card priority-card">
+            <h3>Prioritas Terendah</h3>
+            <p>${
+              weakest.length
+                ? weakest.map(item => `${escapeHtml(item.title)} (${Math.round((toNumber(item.score) / Math.max(toNumber(item.max), 1)) * 100)}%)`).join(" dan ") + " perlu jadi fokus perbaikan pertama."
+                : "Data prioritas belum tersedia."
+            }</p>
+          </article>
+
+          <article class="card scoring-note-card">
+            <h3>Catatan Scoring</h3>
+            <p>Q39 konsumsi air dicatat sebagai data pendukung. Skor air dihitung dari Q40.</p>
+          </article>
+        </section>
+
+        <section class="admin-panel card question-score-panel">
+          <details open>
+            <summary>▾ Lihat rincian skor per pertanyaan</summary>
+            <div class="table-scroll tall-table">
+              <table class="admin-table score-detail-table">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Pertanyaan</th>
+                    <th>Skor</th>
+                    <th>Maks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${questionRows.map(row => `
+                    <tr>
+                      <td>${escapeHtml(String(row.no))}</td>
+                      <td>${escapeHtml(row.title)}</td>
+                      <td>${formatNumber(row.score)}</td>
+                      <td>${formatNumber(row.max)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+
+        <section class="admin-chart-grid">
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Grafik Skor per Komponen</h2><p>Visual skor bagian assessment user terpilih.</p></div>
+              <select id="detailSectionChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="line">Line</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="detailSectionChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Profil Singkat</h2><p>Informasi utama user untuk pengecekan admin.</p></div>
+            </div>
+            <div class="section-list">
+              <div class="section-row"><strong>Nama Usaha</strong><span>${escapeHtml(data.businessName || data.business || "-")}</span><div></div></div>
+              <div class="section-row"><strong>Responden</strong><span>${escapeHtml(data.respondentName || data.name || "-")}</span><div></div></div>
+              <div class="section-row"><strong>Lokasi</strong><span>${escapeHtml(getLocation(data))}</span><div></div></div>
+              <div class="section-row"><strong>Sektor</strong><span>${escapeHtml(data.sector || "-")}</span><div></div></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Jawaban Lengkap</h2><p>Seluruh jawaban user yang dikirim dari database.</p></div>
+          </div>
+          ${renderAnswers(answers)}
+        </section>
+      `;
+    }
+
+    function bindDetailCharts() {
+      document.getElementById("detailSectionChartType")?.addEventListener("change", drawDetailCharts);
+    }
+
+    function drawDetailCharts() {
+      const sections = normalizeScoreSectionsForIndexLook(currentDetail?.scores || {});
+      const data = sections.map(section => ({ label: section.title, value: section.score }));
+      drawSimpleChart("detailSectionChart", data, document.getElementById("detailSectionChartType")?.value || "horizontalBar", { maxItems: 10 });
+    }
+
+    
+    function renderIndexLikeSectionTable(sections) {
+      if (!sections.length) {
+        return `<div class="empty">Data section score tidak tersedia.</div>`;
+      }
+
+      return `
+        <div class="table-scroll score-table-wrap">
+          <table class="admin-table score-section-table">
+            <thead>
+              <tr>
+                <th>Bagian</th>
+                <th>Skor</th>
+                <th>Maks</th>
+                <th>Persentase</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sections.map(section => {
+                const score = toNumber(section.score);
+                const max = toNumber(section.max, 1);
+                const percent = Math.max(0, Math.min(100, Math.round((score / Math.max(max, 1)) * 100)));
+                const status = percent >= 80 ? "Excellent" : percent >= 65 ? "Good" : percent >= 45 ? "Fair" : "Needs improvement";
+
+                return `
+                  <tr>
+                    <td>${escapeHtml(section.title)}</td>
+                    <td><strong>${formatNumber(score)}</strong></td>
+                    <td>${formatNumber(max)}</td>
+                    <td>
+                      <div class="inline-progress">
+                        <div class="bar"><i style="width:${percent}%"></i></div>
+                        <span>${percent}%</span>
+                      </div>
+                    </td>
+                    <td>${escapeHtml(status)}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+function renderSections(sections) {
+      if (!sections.length) {
+        return `<div class="empty">Data section score tidak tersedia.</div>`;
+      }
+
+      return `
+        <div class="section-list">
+          ${sections.map(section => {
+            const score = toNumber(section.score);
+            const max = toNumber(section.max, 1);
+            const percent = Math.max(0, Math.min(100, Math.round((score / Math.max(max, 1)) * 100)));
+
+            return `
+              <div class="section-row">
+                <strong>${escapeHtml(section.title)}</strong>
+                <span>${formatNumber(score)} / ${formatNumber(max)}</span>
+                <div class="bar"><i style="width:${percent}%"></i></div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderAnswers(answers) {
+      const entries = Object.entries(answers || {});
+
+      if (!entries.length) {
+        return `<div class="empty">Jawaban tidak tersedia.</div>`;
+      }
+
+      return `
+        <div class="table-scroll tall-table">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Answer</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map(([key, value]) => `
+                <tr>
+                  <td>${escapeHtml(key)}</td>
+                  <td>${escapeHtml(Array.isArray(value) ? value.join(", ") : value)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
