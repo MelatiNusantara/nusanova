@@ -108,7 +108,7 @@ function adminShell(title, activeMenu, content) {
 
         <div class="gov-utilities" aria-label="Kontrol admin">
           <div class="admin-title-block">
-            <strong>Green SME Admin</strong>
+            <strong>Admin Profil UMKM Hijau Berdampak</strong>
             <small>${escapeHtml(title)}</small>
           </div>
           <button class="btn ghost" type="button" onclick="logoutAdmin()">Logout</button>
@@ -143,8 +143,9 @@ function adminShell(title, activeMenu, content) {
           <p>Platform asesmen Green SME ini didukung untuk penguatan kapasitas UMKM yang berkelanjutan, tertib, dan berdampak.</p>
         </div>
         <div class="official-footer__meta" aria-label="Keterangan hak cipta">
-          <span>Green SME Assessment</span>
-          <small>© 2026 Candra Naya Lestari. Seluruh hak cipta dilindungi.</small>
+          <span>Profil UMKM Hijau Berdampak</span>
+          <small>Nusanova Climate Practice Group</small>
+          <small>(Bagian dari PT Candra Naya Lestari)</small>
         </div>
       </div>
     </footer>
