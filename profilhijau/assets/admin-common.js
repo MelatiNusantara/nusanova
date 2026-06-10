@@ -137,14 +137,9 @@ function adminShell(title, activeMenu, content) {
 
     <footer class="official-footer" aria-label="Informasi resmi platform">
       <div class="official-footer__inner">
-        <div class="official-footer__identity">
-          <span class="official-footer__eyebrow">Dukungan Platform</span>
-          <strong>Candra Naya Lestari</strong>
-          <p>Platform asesmen Green SME ini didukung untuk penguatan kapasitas UMKM yang berkelanjutan, tertib, dan berdampak.</p>
-        </div>
-        <div class="official-footer__meta" aria-label="Keterangan hak cipta">
-          <span>Profil UMKM Hijau Berdampak</span>
-          <small>Nusanova Climate Practice Group</small>
+        <div class="official-footer__meta">
+          <span class="official-footer__eyebrow">Didukung Oleh</span>
+          <span>Nusanova Climate Practice Group</span>
           <small>(Bagian dari PT Candra Naya Lestari)</small>
         </div>
       </div>
