@@ -1,6 +1,7 @@
 // const API_BASE = "http://localhost:8080";
 const API_BASE = "https://api-profilhijau.nusanova.org";
 const ADMIN_KEY_STORAGE = "green_sme_admin_key";
+const OFFICIAL_QUESTION_TOTAL = 63;
 
 function getAdminKey() {
   return sessionStorage.getItem(ADMIN_KEY_STORAGE) || "";
@@ -995,6 +996,63 @@ function getAssessmentAnswers(assessment) {
 
 function getAssessmentScores(assessment) {
   return parseJsonSafe(assessment.scoresJson || assessment.scores || assessment.scoreJson, assessment.scores || {});
+}
+
+function getAssistanceRecommendationsFromScores(scores) {
+  const source = scores || {};
+  return Array.isArray(source.assistanceRecommendations)
+    ? source.assistanceRecommendations
+    : [];
+}
+
+function getSectorAssessmentFromScores(scores) {
+  const source = scores || {};
+  return source.sectorAssessment || null;
+}
+
+function buildAssistanceSummaryFromAssessments(assessments) {
+  const map = new Map();
+
+  (assessments || []).forEach(assessment => {
+    const scores = getAssessmentScores(assessment);
+    const recommendations = getAssistanceRecommendationsFromScores(scores);
+
+    recommendations.forEach(item => {
+      String(item.institution || "")
+        .split("/")
+        .map(x => x.trim())
+        .filter(Boolean)
+        .forEach(institution => {
+          map.set(institution, (map.get(institution) || 0) + 1);
+        });
+    });
+  });
+
+  return Array.from(map.entries())
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+}
+
+function buildOfficialSectorSummaryFromAssessments(assessments, users) {
+  const map = new Map();
+
+  (assessments || []).forEach(assessment => {
+    const scores = getAssessmentScores(assessment);
+    const sectorAssessment = getSectorAssessmentFromScores(scores);
+    const label = sectorAssessment?.sector || assessment.sector || assessment.businessSector || "Tidak diisi";
+    map.set(label, (map.get(label) || 0) + 1);
+  });
+
+  if (map.size === 0) {
+    (users || []).forEach(user => {
+      const label = user.sector || "Tidak diisi";
+      map.set(label, (map.get(label) || 0) + 1);
+    });
+  }
+
+  return Array.from(map.entries())
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
 }
 
 function answerToLabel(value) {
