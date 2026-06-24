@@ -1494,7 +1494,7 @@
       return links.map(link => {
         const name = escapeHtml(link.name);
         return link.url
-          ? `<a href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+          ? `<a class="institution-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
           : name;
       }).join(" / ");
     }
