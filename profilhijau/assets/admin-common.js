@@ -65,6 +65,74 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
+
+const INSTITUTION_CONTACTS = {
+  "Melati Nusantara": "https://www.instagram.com/melatinusantara/",
+  "APINDO": "https://www.instagram.com/apindoumkm/?hl=en",
+  "Temani": "https://www.nusanova.org/",
+  "NusaNova": "https://www.nusanova.org/",
+  "KUMKM": "https://ppid.umkm.go.id/",
+  "KUKM": "https://ppid.umkm.go.id/",
+  "KEM": "https://www.instagram.com/ekonomimembumi/?hl=en",
+  "TUMBU": "https://tumbu.co.id/home"
+};
+
+const INSTITUTION_ALIASES = {
+  "UNUSA": "Universitas Nahdlatul Ulama Surabaya",
+  "UWIKA": "Universitas Widya Kartika Surabaya",
+  "UNPAR": "Universitas Katolik Parahyangan",
+  "KUKM": "KUMKM",
+  "KUMKM": "KUMKM",
+  "NUSANOVA": "NusaNova",
+  "TEMANI": "Temani",
+  "APINDO": "APINDO",
+  "BEDO": "BEDO",
+  "GRI": "GRI",
+  "BINUS": "BINUS",
+  "DSC": "DSC",
+  "GIZ CASE": "GIZ CASE",
+  "KEM": "KEM",
+  "ILO": "ILO",
+  "SEDES": "SEDES",
+  "Origo": "Origo",
+  "UKM Indonesia": "UKM Indonesia",
+  "Melati Nusantara": "Melati Nusantara"
+};
+
+function canonicalInstitutionName(name) {
+  const clean = String(name || "").trim();
+  return INSTITUTION_ALIASES[clean] || clean;
+}
+
+function getInstitutionLinks(institutionText) {
+  return String(institutionText || "")
+    .split("/")
+    .map(name => canonicalInstitutionName(name))
+    .filter(Boolean)
+    .map(name => ({
+      name,
+      url: INSTITUTION_CONTACTS[name] || ""
+    }));
+}
+
+function renderInstitutionLinks(item) {
+  const links = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
+    ? item.institutionLinks
+    : getInstitutionLinks(item?.institution);
+
+  if (!links.length) return "-";
+
+  return links.map(link => {
+    const name = escapeHtml(link.name);
+    return link.url
+        ? `<a class="institution-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+        : name;
+  }).join(" / ");
+}
+
 function normalizeText(value) {
   return String(value ?? "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -1018,18 +1086,29 @@ function buildAssistanceSummaryFromAssessments(assessments) {
     const recommendations = getAssistanceRecommendationsFromScores(scores);
 
     recommendations.forEach(item => {
-      String(item.institution || "")
-        .split("/")
-        .map(x => x.trim())
-        .filter(Boolean)
-        .forEach(institution => {
-          map.set(institution, (map.get(institution) || 0) + 1);
-        });
+      const links = Array.isArray(item.institutionLinks) && item.institutionLinks.length
+        ? item.institutionLinks
+        : getInstitutionLinks(item.institution);
+
+      links.forEach(link => {
+        const name = link.name || "";
+        if (!name) return;
+
+        const current = map.get(name) || {
+          label: name,
+          value: 0,
+          url: link.url || ""
+        };
+
+        current.value += 1;
+        current.url = current.url || link.url || "";
+
+        map.set(name, current);
+      });
     });
   });
 
-  return Array.from(map.entries())
-    .map(([label, value]) => ({ label, value }))
+  return Array.from(map.values())
     .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
 }
 
