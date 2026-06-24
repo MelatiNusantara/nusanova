@@ -72,7 +72,7 @@ function escapeAttr(value) {
 const INSTITUTION_CONTACTS = {
   "Melati Nusantara": "https://www.instagram.com/melatinusantara/",
   "APINDO": "https://www.instagram.com/apindoumkm/?hl=en",
-  "Temani": "https://www.nusanova.org/",
+  "Temani": "https://www.nusanova.org/temani/demo/",
   "NusaNova": "https://www.nusanova.org/",
   "KUMKM": "https://ppid.umkm.go.id/",
   "KUKM": "https://ppid.umkm.go.id/",
