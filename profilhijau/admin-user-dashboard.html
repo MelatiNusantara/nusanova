@@ -399,7 +399,7 @@
             <tr>
               <td><strong>${escapeHtml(item.code || "-")}</strong></td>
               <td>${escapeHtml(item.type || "-")}</td>
-              <td>${escapeHtml(item.institution || "-")}</td>
+              <td>${renderInstitutionLinks(item)}</td>
               <td>${escapeHtml(item.title || "-")}</td>
               <td>${escapeHtml(item.recommendation || "-")}</td>
             </tr>
