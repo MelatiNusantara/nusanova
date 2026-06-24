@@ -87,7 +87,7 @@
     }
 
     function getInputDate(user) {
-      return user.inputDate || user.assessmentDate || user.createdAt || user.submittedAt || user.updatedAt || "-";
+      return user.inputDate || user.createdAt || user.submittedAt || user.updatedAt || user.assessmentDate || "-";
     }
 
     function bindDashboardFilters() {
@@ -119,6 +119,56 @@
         dashboardState.page = 1;
         render();
       });
+
+      document.getElementById("dashboardRecalculateBtn")?.addEventListener("click", recalculateAssessmentsFromDashboard);
+    }
+
+    async function recalculateAssessmentsFromDashboard() {
+      const button = document.getElementById("dashboardRecalculateBtn");
+      const info = document.getElementById("dashboardRecalculateInfo");
+
+      const confirmed = confirm(
+        "Hitung ulang scoring untuk semua data SUBMITTED?\n\nProses ini akan mengisi ulang rekomendasi pendampingan dan penilaian sektor dari jawaban yang sudah tersimpan."
+      );
+
+      if (!confirmed) return;
+
+      const oldText = button?.textContent || "Hitung Ulang Scoring";
+
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Menghitung ulang...";
+        }
+
+        if (info) {
+          info.textContent = "Sedang menghitung ulang data lama. Mohon tunggu...";
+        }
+
+        const result = await adminFetch("/api/admin/assessments/recalculate", {
+          method: "POST"
+        });
+
+        alert(`Berhasil menghitung ulang ${formatNumber(result.total || 0)} data submitted.`);
+
+        dashboardState.page = 1;
+        await render();
+
+      } catch (error) {
+        console.error(error);
+
+        if (info) {
+          info.textContent = `Gagal menghitung ulang: ${error.message}`;
+        }
+
+        alert(`Gagal menghitung ulang scoring: ${error.message}`);
+
+      } finally {
+        if (button && document.body.contains(button)) {
+          button.disabled = false;
+          button.textContent = oldText;
+        }
+      }
     }
 
     function bindDashboardPagination() {
@@ -135,14 +185,15 @@
       });
     }
 
-    function buildDashboardStats(summary, users) {
+    function buildDashboardStats(summary, users, assessments = []) {
       const listStats = summarizeUsers(users || []);
       const topUsers = (summary.topUsers && summary.topUsers.length ? summary.topUsers : (users || []).slice())
         .sort((a, b) => toNumber(b.totalScore || b.score || b.result?.total) - toNumber(a.totalScore || a.score || a.result?.total))
         .slice(0, 10);
       const highest = topUsers[0] || null;
       const provinceData = countBy(users || [], user => user.province || "Tidak diisi");
-      const sectorData = countBy(users || [], user => user.sector || "Tidak diisi");
+      const sectorData = buildOfficialSectorSummaryFromAssessments(assessments, users);
+      const assistanceData = buildAssistanceSummaryFromAssessments(assessments);
       const statusData = countBy(users || [], user => user.status || "Tidak diisi");
 
       return {
@@ -156,6 +207,7 @@
         yearData: objectToChartData(summary.yearSummary || {}).length ? objectToChartData(summary.yearSummary || {}) : buildYearData(users || []),
         provinceData,
         sectorData,
+        assistanceData,
         statusData,
         topScoreData: topUsers.map(user => ({
           label: getBusinessName(user),
@@ -166,14 +218,14 @@
 
     function buildYearData(users) {
       return countBy(users, user => {
-        const value = user.submittedAt || user.createdAt || user.assessmentDate || user.updatedAt || "";
+        const value = getInputDate(user);
         const match = String(value).match(/\d{4}/);
         return match ? match[0] : "Tidak diisi";
       });
     }
 
     function renderDashboard(summary, users) {
-      const stats = buildDashboardStats(summary, users);
+      const stats = buildDashboardStats(summary, users, dashboardState.assessments);
       const topProvince = stats.provinceData[0]?.label || "-";
       const highestScore = stats.highest ? toNumber(stats.highest.totalScore || stats.highest.score || stats.highest.result?.total) : 0;
       const highestName = stats.highest ? getBusinessName(stats.highest) : "-";
@@ -195,11 +247,22 @@
             <h2>Filter Tanggal Input</h2>
             <p>Filter berdasarkan tanggal data pertama kali masuk/disimpan di database.</p>
           </div>
-          <div class="user-search-box date-filter-box">
+          <div class="user-search-box date-filter-box dashboard-filter-row">
             <input id="dashboardFromDate" type="date" value="${escapeHtml(dashboardState.filters?.fromDate || "")}" aria-label="Tanggal mulai">
             <input id="dashboardToDate" type="date" value="${escapeHtml(dashboardState.filters?.toDate || "")}" aria-label="Tanggal akhir">
+
             <button class="btn primary" id="dashboardFilterBtn" type="button">Filter</button>
             <button class="btn secondary" id="dashboardResetFilterBtn" type="button">Reset</button>
+            <button
+              class="btn secondary admin-recalculate-btn"
+              id="dashboardRecalculateBtn"
+              type="button"
+              title="Hitung Ulang Scoring"
+            >
+              Recalculate
+            </button>
+
+            <small id="dashboardRecalculateInfo" class="dashboard-filter-info"></small>
           </div>
         </section>
 
@@ -215,6 +278,32 @@
               </select>
             </div>
             <canvas id="tierChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Tahun Input</h2><p>Distribusi data berdasarkan tahun data pertama kali masuk database.</p></div>
+              <select id="yearChartType" class="chart-select">
+                <option value="bar" selected>Bar</option>
+                <option value="horizontalBar">Horizontal Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="yearChart" class="admin-chart" height="270"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Kebutuhan Pendampingan</h2><p>Rekap lembaga rujukan berdasarkan trigger Excel terbaru.</p></div>
+              <select id="assistanceChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="assistanceChart" class="admin-chart" height="270"></canvas>
           </article>
 
           <article class="admin-panel card">
@@ -254,6 +343,19 @@
             </div>
             <canvas id="topScoreChart" class="admin-chart" height="270"></canvas>
           </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Status Submission</h2><p>Distribusi status data user.</p></div>
+              <select id="statusChartType" class="chart-select">
+                <option value="doughnut" selected>Doughnut</option>
+                <option value="pie">Pie</option>
+                <option value="bar">Bar</option>
+                <option value="horizontalBar">Horizontal Bar</option>
+              </select>
+            </div>
+            <canvas id="statusChart" class="admin-chart" height="270"></canvas>
+          </article>
         </section>
 
 
@@ -277,6 +379,13 @@
           </div>
           <canvas id="questionChart" class="admin-chart question-chart" height="300"></canvas>
           <div id="questionDistributionTable"></div>
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Rekap Lembaga Pendampingan</h2><p>Jumlah trigger rekomendasi berdasarkan jawaban user.</p></div>
+          </div>
+          ${renderSummaryTable(stats.assistanceData, "Lembaga")}
         </section>
 
         <section class="admin-table-grid">
@@ -306,13 +415,15 @@
           <div class="admin-panel-head">
             <div><h2>Data Semua User</h2><p>Tabel rekap skor user untuk kebutuhan pengecekan admin.</p></div>
           </div>
-          ${renderAllUsersTable(users || [])}
+          <div id="allUsersTableMount">
+            ${renderAllUsersTable(users || [])}
+          </div>
         </section>
       `;
     }
 
     function bindDashboardCharts() {
-      ["tierChartType", "yearChartType", "provinceChartType", "sectorChartType", "statusChartType", "topScoreChartType"].forEach(id => {
+      ["tierChartType", "yearChartType", "provinceChartType", "sectorChartType", "assistanceChartType", "statusChartType", "topScoreChartType"].forEach(id => {
         document.getElementById(id)?.addEventListener("change", drawDashboardCharts);
       });
 
@@ -321,13 +432,61 @@
     }
 
     function drawDashboardCharts() {
-      const stats = buildDashboardStats(dashboardState.summary, dashboardState.users);
-      drawSimpleChart("tierChart", stats.tierData, document.getElementById("tierChartType")?.value || "horizontalBar", { maxItems: 8 });
-      drawSimpleChart("yearChart", stats.yearData, document.getElementById("yearChartType")?.value || "bar", { maxItems: 8 });
-      drawSimpleChart("provinceChart", compactChartData(stats.provinceData, 8), document.getElementById("provinceChartType")?.value || "horizontalBar", { maxItems: 8 });
-      drawSimpleChart("sectorChart", compactChartData(stats.sectorData, 8), document.getElementById("sectorChartType")?.value || "horizontalBar", { maxItems: 8 });
-      drawSimpleChart("statusChart", compactChartData(stats.statusData, 8), document.getElementById("statusChartType")?.value || "doughnut", { maxItems: 8 });
-      drawSimpleChart("topScoreChart", compactChartData(stats.topScoreData, 10), document.getElementById("topScoreChartType")?.value || "horizontalBar", { maxItems: 10 });
+      const stats = buildDashboardStats(
+        dashboardState.summary,
+        dashboardState.users,
+        dashboardState.assessments
+      );
+
+      drawSimpleChart(
+        "tierChart",
+        stats.tierData,
+        document.getElementById("tierChartType")?.value || "horizontalBar",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "yearChart",
+        stats.yearData,
+        document.getElementById("yearChartType")?.value || "bar",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "provinceChart",
+        compactChartData(stats.provinceData, 8),
+        document.getElementById("provinceChartType")?.value || "horizontalBar",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "sectorChart",
+        compactChartData(stats.sectorData, 8),
+        document.getElementById("sectorChartType")?.value || "horizontalBar",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "assistanceChart",
+        compactChartData(stats.assistanceData, 8),
+        document.getElementById("assistanceChartType")?.value || "horizontalBar",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "statusChart",
+        compactChartData(stats.statusData, 8),
+        document.getElementById("statusChartType")?.value || "doughnut",
+        { maxItems: 8 }
+      );
+
+      drawSimpleChart(
+        "topScoreChart",
+        compactChartData(stats.topScoreData, 10),
+        document.getElementById("topScoreChartType")?.value || "horizontalBar",
+        { maxItems: 10 }
+      );
+
       drawQuestionDashboard();
     }
 
