@@ -93,8 +93,8 @@
     const STORAGE_PREFIX = "green_sme_assessment_v4_";
     const STORAGE_KEY = STORAGE_PREFIX + "answers";
 
-    // const API_BASE = "http://localhost:8080";
-    const API_BASE = "https://api-profilhijau.nusanova.org";
+    const API_BASE = "http://localhost:8080";
+    // const API_BASE = "https://api-profilhijau.nusanova.org";
     const ASSESSMENT_ID_KEY = STORAGE_PREFIX + "assessment_id";
 
     let currentAssessmentId = localStorage.getItem(ASSESSMENT_ID_KEY) || null;
@@ -234,20 +234,53 @@
     ];
 
     const TIER_LABELS = [
-      "Tier 0 - Pra-Alignment",
-      "Tier 1 - Konvensional",
+      "Tier 0 - Pra-Hijau / Pra-Alignment",
+      "Tier 1 - Dasar Hijau / Tahap Awal",
       "Tier 2 - Transisi Hijau",
       "Tier 3 - UMKM Hijau",
       "Tier 4 - Pemimpin Keberlanjutan"
     ];
 
     const TIER_RECOMMENDATIONS = [
-      "Pendampingan dasar untuk legalitas, pencatatan keuangan, kepatuhan minimum, APD, dan penyusunan rencana perbaikan UMKM Hijau.",
+      "Pendampingan dasar untuk legalitas, pencatatan keuangan, kepatuhan minimum, dan penyusunan rencana perbaikan UMKM Hijau.",
       "Konsultasi awal UMKM Hijau dan penyusunan rencana perbaikan dasar.",
-      "Penguatan praktik hijau, tata kelola, laporan keberlanjutan sederhana, serta kesiapan akses pembiayaan dan jejaring hijau.",
-      "Penguatan jejaring industri, akses pasar, legalitas lanjutan, sertifikasi, showcase, dan kemitraan usaha.",
-      "Diarahkan menjadi role model, masuk jejaring kolaborasi, showcase praktik baik, dan perluasan pasar hijau."
+      "Pendampingan penguatan Green SOP, pencatatan usaha, laporan keberlanjutan sederhana, serta kesiapan akses pembiayaan dan jejaring hijau.",
+      "Penguatan jejaring industri, akses pasar, legalitas lanjutan, sertifikasi, showcase, misi dagang, dan kemitraan usaha.",
+      "Diarahkan menjadi role model, masuk jejaring kolaborasi, showcase praktik baik, perluasan pasar hijau dan pembiayaan hijau."
     ];
+
+    const INSTITUTION_CONTACTS = {
+      "Melati Nusantara": "https://www.instagram.com/melatinusantara/",
+      "APINDO": "https://www.instagram.com/apindoumkm/?hl=en",
+      "Temani": "https://www.nusanova.org/",
+      "NusaNova": "https://www.nusanova.org/",
+      "KUMKM": "https://ppid.umkm.go.id/",
+      "KUKM": "https://ppid.umkm.go.id/",
+      "KEM": "https://www.instagram.com/ekonomimembumi/?hl=en",
+      "TUMBU": "https://tumbu.co.id/home"
+    };
+
+    const INSTITUTION_ALIASES = {
+      "UNUSA": "Universitas Nahdlatul Ulama Surabaya",
+      "UWIKA": "Universitas Widya Kartika Surabaya",
+      "UNPAR": "Universitas Katolik Parahyangan",
+      "KUKM": "KUMKM",
+      "KUMKM": "KUMKM",
+      "NUSANOVA": "NusaNova",
+      "TEMANI": "Temani",
+      "APINDO": "APINDO",
+      "BEDO": "BEDO",
+      "GRI": "GRI",
+      "BINUS": "BINUS",
+      "DSC": "DSC",
+      "GIZ CASE": "GIZ CASE",
+      "KEM": "KEM",
+      "ILO": "ILO",
+      "SEDES": "SEDES",
+      "Origo": "Origo",
+      "UKM Indonesia": "UKM Indonesia",
+      "Melati Nusantara": "Melati Nusantara"
+    };
 
     const QUESTIONS = [
       {
@@ -476,7 +509,7 @@
         other: true,
         options: [
           { value: "mikro", label: "Mikro: hingga Rp 2 M" },
-          { value: "kecil", label: "Kecil: Rp 2 - Rp15 M" },
+          { value: "kecil", label: "Kecil: Rp 2 M - Rp15 M" },
           { value: "menengah", label: "Menengah: Rp15 M - Rp50 M" },
           { value: "other", label: "Other" }
         ]
@@ -1431,6 +1464,41 @@
       })[ch]);
     }
 
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    function canonicalInstitutionName(name) {
+      const clean = String(name || "").trim();
+      return INSTITUTION_ALIASES[clean] || clean;
+    }
+
+    function getInstitutionLinks(institutionText) {
+      return String(institutionText || "")
+        .split("/")
+        .map(name => canonicalInstitutionName(name))
+        .filter(Boolean)
+        .map(name => ({
+          name,
+          url: INSTITUTION_CONTACTS[name] || ""
+        }));
+    }
+
+    function renderInstitutionLinks(item) {
+      const links = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
+        ? item.institutionLinks
+        : getInstitutionLinks(item?.institution);
+
+      if (!links.length) return "-";
+
+      return links.map(link => {
+        const name = escapeHtml(link.name);
+        return link.url
+          ? `<a href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+          : name;
+      }).join(" / ");
+    }
+
     function getMaxPoint(qid) {
       return MAX_POINTS[qid] || 0;
     }
@@ -1450,17 +1518,44 @@
       );
     }
 
+    function sectionOrderIndex(sectionId) {
+      const index = SECTIONS.findIndex(section => section.id === sectionId);
+      return index >= 0 ? index : 999;
+    }
+
+    function sortQuestionsForDisplay(list) {
+      return list.slice().sort((a, b) => {
+        const sectionDiff = sectionOrderIndex(a.section) - sectionOrderIndex(b.section);
+
+        if (sectionDiff !== 0) {
+          return sectionDiff;
+        }
+
+        return Number(a.no || 0) - Number(b.no || 0);
+      });
+    }
+
     function activeQuestions() {
-      return QUESTIONS.filter(q => !q.hidden && !isQuestionSkipped(q));
+      return sortQuestionsForDisplay(
+        QUESTIONS.filter(q => !q.hidden && !isQuestionSkipped(q))
+      );
     }
 
     function numberedQuestions() {
-      return QUESTIONS.filter(q => !q.hidden);
+      return sortQuestionsForDisplay(
+        QUESTIONS.filter(q => !q.hidden)
+      );
     }
 
     function getVisibleQuestionNo(question) {
-      const index = numberedQuestions().findIndex(q => q.id === question.id);
-      return index >= 0 ? index + 1 : (question?.no || "-");
+      const activeIndex = activeQuestions().findIndex(q => q.id === question.id);
+
+      if (activeIndex >= 0) {
+        return activeIndex + 1;
+      }
+
+      const stableIndex = numberedQuestions().findIndex(q => q.id === question.id);
+      return stableIndex >= 0 ? stableIndex + 1 : (question?.no || "-");
     }
 
     function applyEmployeeDependencyDefaults() {
@@ -1879,6 +1974,10 @@
       saveAnswers();
       clearError(qid);
 
+      if (["Q13", "Q14", "Q15", "Q16", "Q17", "Q18"].includes(qid)) {
+        ["Q13", "Q14", "Q15", "Q16", "Q17", "Q18"].forEach(clearError);
+      }
+
       if (qid === "Q13" || qid === "Q30") {
         renderApp();
         return;
@@ -1904,6 +2003,10 @@
           return;
         }
 
+        if (!validateSectionBusinessRules(section.id)) {
+          return;
+        }
+
         currentSectionIndex = Math.min(sections.length - 1, currentSectionIndex + 1);
         renderApp();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1916,6 +2019,10 @@
 
         if (invalid) {
           validateQuestion(invalid);
+          return;
+        }
+
+        if (!validateSectionBusinessRules(section.id)) {
           return;
         }
 
@@ -1973,6 +2080,109 @@
       }
 
       return String(value ?? "").trim().length > 0;
+    }
+
+    function parseEmployeeCount(qid) {
+      let value = answers[qid];
+
+      if (value === "other") {
+        value = answers[qid + "_other"];
+      }
+
+      const raw = String(value ?? "").trim();
+
+      if (!raw) {
+        return 0;
+      }
+
+      const match = raw.match(/\d+/);
+      return match ? Number(match[0]) : 0;
+    }
+
+    function setQuestionError(qid, message) {
+      const error = $("#err_" + qid);
+      const card = $("#card_" + qid);
+
+      if (error) {
+        error.textContent = message;
+      }
+
+      if (card) {
+        card.classList.add("invalid");
+      }
+    }
+
+    function scrollToQuestion(qid) {
+      const card = $("#card_" + qid);
+
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    function validateEmployeeConsistency() {
+      if (isNoEmployeeSelected()) {
+        ["Q13", "Q14", "Q15", "Q16", "Q17", "Q18"].forEach(clearError);
+        return true;
+      }
+
+      const total = parseEmployeeCount("Q13");
+      const male = parseEmployeeCount("Q14");
+      const female = parseEmployeeCount("Q15");
+      const disabled = parseEmployeeCount("Q16");
+      const disabledMale = parseEmployeeCount("Q17");
+      const disabledFemale = parseEmployeeCount("Q18");
+
+      ["Q13", "Q14", "Q15", "Q16", "Q17", "Q18"].forEach(clearError);
+
+      if (male + female !== total) {
+        setQuestionError("Q13", "Jumlah karyawan laki-laki + perempuan harus sama dengan jumlah seluruh karyawan.");
+        setQuestionError("Q14", "Cek kembali jumlah karyawan laki-laki.");
+        setQuestionError("Q15", "Cek kembali jumlah karyawan perempuan.");
+        scrollToQuestion("Q13");
+        toast("Jumlah karyawan laki-laki + perempuan belum sama dengan total karyawan.");
+        return false;
+      }
+
+      if (disabled > total) {
+        setQuestionError("Q16", "Jumlah karyawan penyandang disabilitas tidak boleh lebih besar dari jumlah seluruh karyawan.");
+        scrollToQuestion("Q16");
+        toast("Jumlah karyawan disabilitas melebihi total karyawan.");
+        return false;
+      }
+
+      if (disabledMale + disabledFemale !== disabled) {
+        setQuestionError("Q16", "Jumlah disabilitas laki-laki + perempuan harus sama dengan total karyawan disabilitas.");
+        setQuestionError("Q17", "Cek kembali jumlah karyawan disabilitas laki-laki.");
+        setQuestionError("Q18", "Cek kembali jumlah karyawan disabilitas perempuan.");
+        scrollToQuestion("Q16");
+        toast("Jumlah disabilitas laki-laki + perempuan belum sama dengan total disabilitas.");
+        return false;
+      }
+
+      if (disabledMale > male) {
+        setQuestionError("Q17", "Jumlah karyawan disabilitas laki-laki tidak boleh lebih besar dari jumlah karyawan laki-laki.");
+        scrollToQuestion("Q17");
+        toast("Jumlah disabilitas laki-laki melebihi jumlah karyawan laki-laki.");
+        return false;
+      }
+
+      if (disabledFemale > female) {
+        setQuestionError("Q18", "Jumlah karyawan disabilitas perempuan tidak boleh lebih besar dari jumlah karyawan perempuan.");
+        scrollToQuestion("Q18");
+        toast("Jumlah disabilitas perempuan melebihi jumlah karyawan perempuan.");
+        return false;
+      }
+
+      return true;
+    }
+
+    function validateSectionBusinessRules(sectionId) {
+      if (sectionId === "identitas_usaha") {
+        return validateEmployeeConsistency();
+      }
+
+      return true;
     }
 
     function validateQuestion(q) {
@@ -2083,125 +2293,159 @@
   function buildAssistanceRecommendations(tier) {
     const items = [];
 
-    items.push({
-      code: `T${tier}`,
-      type: "Tier",
-      institution: tier <= 0 ? "UNUSA / UWIKA / APINDON UMKM"
-        : tier === 1 ? "UWIKA / UNUSA"
-        : tier === 2 ? "UNUSA / UWIKA / APINDON UMKM"
-        : "APINDON UMKM",
-      title: TIER_LABELS[tier],
-      recommendation: TIER_RECOMMENDATIONS[tier]
-    });
+    const addRecommendation = (code, type, institution, title, recommendation) => {
+      items.push({
+        code,
+        type,
+        institution,
+        institutionLinks: getInstitutionLinks(institution),
+        title,
+        recommendation
+      });
+    };
+
+    const isNo = qid => val(qid) === "no";
+    const isNone = qid => val(qid) === "none";
+    const isNotRoutine = qid => val(qid) !== "routine";
+
+    addRecommendation(
+      `T${tier}`,
+      "Tier",
+      tier <= 0 ? "UNUSA / UWIKA / APINDO / KUKM / UNPAR"
+        : tier === 1 ? "UWIKA / UNUSA / KUKM / UNPAR"
+        : tier === 2 ? "UNUSA / UWIKA / APINDO / KEM"
+        : tier === 3 ? "APINDO / BEDO"
+        : "APINDO / KEM / NusaNova",
+      TIER_LABELS[tier],
+      TIER_RECOMMENDATIONS[tier]
+    );
 
     if (has("Q9", "no_legal") || !has("Q9", "nib")) {
-      items.push({
-        code: "R01",
-        type: "Kebutuhan Khusus",
-        institution: "APINDON UMKM",
-        title: "Legalitas usaha belum kuat",
-        recommendation: "Pendampingan legalitas usaha seperti NIB, NPWP, izin dasar, sertifikasi produk, dan jejaring kelembagaan."
-      });
+      addRecommendation(
+        "R01",
+        "Kebutuhan Khusus",
+        "APINDO / KUKM / UKM Indonesia",
+        "Legalitas usaha belum kuat",
+        "Pendampingan legalitas usaha seperti NIB, NPWP, izin dasar, sertifikasi produk, dan jejaring kelembagaan."
+      );
     }
 
-    if (val("Q25") === "no") {
-      items.push({
-        code: "R02",
-        type: "Kebutuhan Khusus",
-        institution: "Universitas Nahdlatul Ulama Surabaya",
-        title: "Belum memiliki laporan keuangan",
-        recommendation: "Pendampingan pencatatan usaha dan penyusunan laporan keuangan sederhana."
-      });
+    if (isNo("Q25")) {
+      addRecommendation(
+        "R02",
+        "Kebutuhan Khusus",
+        "UNUSA / DSC / TUMBU",
+        "Belum memiliki laporan keuangan",
+        "Pendampingan pencatatan usaha dan penyusunan laporan keuangan sederhana."
+      );
     }
 
-    if (val("Q26") === "no") {
-      items.push({
-        code: "R03",
-        type: "Kebutuhan Khusus",
-        institution: "Universitas Nahdlatul Ulama Surabaya",
-        title: "Keuangan pribadi dan usaha belum dipisah",
-        recommendation: "Pendampingan pemisahan keuangan pribadi dan bisnis, arus kas, serta pencatatan transaksi usaha."
-      });
+    if (isNo("Q26")) {
+      addRecommendation(
+        "R03",
+        "Kebutuhan Khusus",
+        "UNUSA / DSC / TUMBU",
+        "Keuangan pribadi dan usaha belum dipisah",
+        "Pendampingan pemisahan keuangan pribadi dan bisnis, arus kas, serta pencatatan transaksi usaha."
+      );
     }
 
-    if (val("Q24") === "no") {
-      items.push({
-        code: "R04",
-        type: "Kebutuhan Khusus",
-        institution: "UNUSA / Universitas Widya Kartika Surabaya",
-        title: "Belum menerapkan Green SOP",
-        recommendation: "Pendampingan penyusunan Green SOP sederhana sesuai karakteristik proses produksi/usaha."
-      });
+    if (
+      isNo("Q24") ||
+      isNo("Q30") ||
+      ["none", "lt50"].includes(val("Q32")) ||
+      ["none", "partial"].includes(val("Q33")) ||
+      ["none", "progress"].includes(val("Q34")) ||
+      isNo("Q36") ||
+      isNo("Q37") ||
+      isNone("Q40")
+    ) {
+      addRecommendation(
+        "R04",
+        "Kebutuhan Khusus",
+        "UNUSA / UWIKA / NUSANOVA",
+        "Green SOP dan proses hijau perlu diperkuat",
+        "Pendampingan penyusunan Green SOP sederhana sesuai karakteristik proses produksi/usaha."
+      );
     }
 
-    if (["none", "making"].includes(val("Q29"))) {
-      items.push({
-        code: "R05",
-        type: "Kebutuhan Khusus",
-        institution: "UNUSA / Universitas Widya Kartika Surabaya",
-        title: "Sustainability Report belum matang",
-        recommendation: "Pendampingan penyusunan laporan keberlanjutan sederhana dan dokumentasi dampak usaha."
-      });
+    if (
+      ["none", "partial"].includes(val("Q27")) ||
+      ["none", "on_request"].includes(val("Q28")) ||
+      ["none", "making"].includes(val("Q29"))
+    ) {
+      addRecommendation(
+        "R05",
+        "Kebutuhan Khusus",
+        "UNUSA / UWIKA / UNPAR / GRI / BINUS",
+        "Sustainability Report belum matang",
+        "Pendampingan penyusunan laporan keberlanjutan sederhana dan dokumentasi dampak usaha."
+      );
     }
 
-    if (val("Q38") !== "routine") {
-      items.push({
-        code: "R06",
-        type: "Kebutuhan Khusus",
-        institution: "UNUSA / Universitas Widya Kartika Surabaya",
-        title: "Carbon footprint belum diukur rutin",
-        recommendation: "Pendampingan pengukuran awal jejak karbon dan pencatatan data lingkungan dasar."
-      });
+    if (isNotRoutine("Q38")) {
+      addRecommendation(
+        "R06",
+        "Kebutuhan Khusus",
+        "UNUSA / UNPAR / UWIKA / GIZ CASE / GRI",
+        "Carbon footprint belum diukur rutin",
+        "Pendampingan pengukuran awal jejak karbon dan pencatatan data lingkungan dasar."
+      );
     }
 
-    if (val("Q48") === "none") {
-      items.push({
-        code: "R07",
-        type: "Kebutuhan Khusus",
-        institution: "APINDON UMKM",
-        title: "Supplier belum memakai kriteria keberlanjutan",
-        recommendation: "Pendampingan jejaring pemasok, kurasi supplier, dan kemitraan rantai pasok yang lebih berkelanjutan."
-      });
+    if (
+      ["none", "some"].includes(val("Q48")) ||
+      ["none", "mixed"].includes(val("Q49")) ||
+      ["none", "lt15"].includes(val("Q50")) ||
+      ["none", "occasional"].includes(val("Q51"))
+    ) {
+      addRecommendation(
+        "R07",
+        "Kebutuhan Khusus",
+        "APINDO / DSC / BEDO",
+        "Supplier dan rantai pasok berkelanjutan perlu diperkuat",
+        "Pendampingan jejaring pemasok, kurasi supplier, dan kemitraan rantai pasok yang lebih berkelanjutan."
+      );
     }
 
     if (val("Q56") === "never") {
-      items.push({
-        code: "R08",
-        type: "Kebutuhan Khusus",
-        institution: "UNUSA / Universitas Widya Kartika Surabaya",
-        title: "Promosi digital hijau belum berjalan",
-        recommendation: "Pendampingan komunikasi, promosi digital, dan narasi praktik hijau UMKM."
-      });
+      addRecommendation(
+        "R08",
+        "Kebutuhan Khusus",
+        "UNUSA / KEM",
+        "Promosi digital hijau belum berjalan",
+        "Pendampingan komunikasi, promosi digital, dan narasi praktik hijau UMKM."
+      );
     }
 
-    if (val("Q44") === "looking") {
-      items.push({
-        code: "R09",
-        type: "Kebutuhan Khusus",
-        institution: "Temani",
-        title: "Butuh akses pembiayaan hijau",
-        recommendation: "Pendampingan kesiapan akses pembiayaan hijau, proposal kebutuhan investasi, dan koneksi jejaring pembiayaan."
-      });
+    if (["looking", "receiving"].includes(val("Q44")) || ["planned", "budgeted"].includes(val("Q46"))) {
+      addRecommendation(
+        "R09",
+        "Kebutuhan Khusus",
+        "TEMANI / KEM",
+        "Butuh akses pembiayaan hijau",
+        "Pendampingan kesiapan akses pembiayaan hijau, proposal kebutuhan investasi, dan koneksi jejaring pembiayaan."
+      );
     }
 
     if (["incomplete", "none"].includes(val("Q60"))) {
-      items.push({
-        code: "R10",
-        type: "Kebutuhan Khusus",
-        institution: "UNUSA / Universitas Widya Kartika Surabaya",
-        title: "APD belum lengkap",
-        recommendation: "Pendampingan aspek K3 dasar, penyediaan APD sesuai risiko kerja, dan tata kelola keselamatan karyawan."
-      });
+      addRecommendation(
+        "R10",
+        "Kebutuhan Khusus",
+        "UNUSA / APINDO / ILO",
+        "APD belum lengkap",
+        "Pendampingan aspek K3 dasar, penyediaan APD sesuai risiko kerja, dan tata kelola keselamatan karyawan."
+      );
     }
 
-    if (val("Q41") === "none" || val("Q42") === "no" || ["planned", "no_plan"].includes(val("Q46"))) {
-      items.push({
-        code: "R11",
-        type: "Kebutuhan Khusus",
-        institution: "Melati Nusantara",
-        title: "Perencanaan keuangan hijau perlu diperkuat",
-        recommendation: "Pendampingan literasi keuangan, perencanaan keuangan usaha, dan edukasi pengelolaan biaya lingkungan."
-      });
+    if (val("Q41") === "none" || val("Q42") === "no") {
+      addRecommendation(
+        "R11",
+        "Kebutuhan Khusus",
+        "Melati Nusantara",
+        "Perencanaan keuangan hijau perlu diperkuat",
+        "Pendampingan literasi keuangan, perencanaan keuangan usaha, pengelolaan arus kas, penyusunan target keuangan, serta peningkatan kapasitas pengambilan keputusan keuangan bagi UMKM."
+      );
     }
 
     return items;
@@ -2211,17 +2455,19 @@
     const map = new Map();
 
     assistanceRecommendations.forEach(item => {
-      String(item.institution || "")
-        .split("/")
-        .map(x => x.trim())
-        .filter(Boolean)
-        .forEach(name => map.set(name, (map.get(name) || 0) + 1));
+      const links = Array.isArray(item.institutionLinks) && item.institutionLinks.length
+        ? item.institutionLinks
+        : getInstitutionLinks(item.institution);
+
+      links.forEach(link => {
+        const current = map.get(link.name) || { institution: link.name, count: 0, url: link.url || "" };
+        current.count += 1;
+        current.url = current.url || link.url || "";
+        map.set(link.name, current);
+      });
     });
 
-    return Array.from(map.entries()).map(([institution, count]) => ({
-      institution,
-      count
-    }));
+    return Array.from(map.values());
   }
 
   function buildSectorAssessment(qScores, total, tier) {
@@ -2487,7 +2733,30 @@
         return;
       }
 
-     const result = calculateScores();
+      const invalidBusinessSection = visibleSections().find(section => {
+        if (section.id !== "identitas_usaha") {
+          return false;
+        }
+
+        return !validateEmployeeConsistency();
+      });
+
+      if (invalidBusinessSection) {
+        const sectionIndex = visibleSections().findIndex(s => s.id === invalidBusinessSection.id);
+
+        if (sectionIndex >= 0) {
+          currentSectionIndex = sectionIndex;
+          renderApp();
+
+          setTimeout(() => {
+            validateEmployeeConsistency();
+          }, 50);
+        }
+
+        return;
+      }
+
+      const result = calculateScores();
       const mount = $("#dashboardMount");
       mount.innerHTML = renderDashboard(result);
       mount.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2697,7 +2966,7 @@
                 <tr>
                   <td><strong>${escapeHtml(item.code)}</strong></td>
                   <td>${escapeHtml(item.type)}</td>
-                  <td>${escapeHtml(item.institution)}</td>
+                  <td>${renderInstitutionLinks(item)}</td>
                   <td>${escapeHtml(item.title)}</td>
                   <td>${escapeHtml(item.recommendation)}</td>
                 </tr>
@@ -5094,6 +5363,21 @@
 
     tr:last-child td {
       border-bottom: 0;
+    }
+
+    .institution-link {
+      color: #2563eb;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .institution-link:visited {
+      color: #2563eb;
+    }
+
+    .institution-link:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
     }
 
     .mini-bar {
