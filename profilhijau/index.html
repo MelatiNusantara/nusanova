@@ -180,6 +180,75 @@
       return list;
     }
 
+    const OFFICIAL_QUESTION_TOTAL = 63;
+
+    const GREEN_SECTORS = [
+      {
+        value: "agri",
+        label: "Pertanian, Peternakan, Perikanan",
+        kbli: "01-03",
+        mandatoryTarget: 15,
+        complementaryTarget: 9,
+        keywords: ["pertanian", "peternakan", "perikanan", "ikan", "budidaya", "hasil perikanan", "pangan segar", "agri", "agrikultur"]
+      },
+      {
+        value: "fnb",
+        label: "Makanan dan Minuman",
+        kbli: "10-11",
+        mandatoryTarget: 14,
+        complementaryTarget: 10,
+        keywords: ["makanan", "minuman", "fnb", "food", "beverage", "kuliner", "restoran", "cafe", "kopi", "pangan", "manufaktur pangan"]
+      },
+      {
+        value: "textile",
+        label: "Tekstil dan Pakaian Jadi",
+        kbli: "13-14",
+        mandatoryTarget: 14,
+        complementaryTarget: 10,
+        keywords: ["tekstil", "pakaian", "fashion", "garment", "garmen", "konveksi", "batik", "kain"]
+      },
+      {
+        value: "wood_craft",
+        label: "Kayu dan Kerajinan",
+        kbli: "16, 31",
+        mandatoryTarget: 15,
+        complementaryTarget: 9,
+        keywords: ["kayu", "kerajinan", "furniture", "mebel", "kriya", "craft", "bambu", "rotan"]
+      },
+      {
+        value: "tourism",
+        label: "Akomodasi dan Pariwisata",
+        kbli: "55-56",
+        mandatoryTarget: 13,
+        complementaryTarget: 11,
+        keywords: ["akomodasi", "pariwisata", "hotel", "penginapan", "homestay", "wisata", "travel", "tourism", "restoran"]
+      },
+      {
+        value: "other",
+        label: "Lainnya / belum masuk 5 sektor prioritas",
+        kbli: "-",
+        mandatoryTarget: 0,
+        complementaryTarget: 0,
+        keywords: []
+      }
+    ];
+
+    const TIER_LABELS = [
+      "Tier 0 - Pra-Alignment",
+      "Tier 1 - Konvensional",
+      "Tier 2 - Transisi Hijau",
+      "Tier 3 - UMKM Hijau",
+      "Tier 4 - Pemimpin Keberlanjutan"
+    ];
+
+    const TIER_RECOMMENDATIONS = [
+      "Pendampingan dasar untuk legalitas, pencatatan keuangan, kepatuhan minimum, APD, dan penyusunan rencana perbaikan UMKM Hijau.",
+      "Konsultasi awal UMKM Hijau dan penyusunan rencana perbaikan dasar.",
+      "Penguatan praktik hijau, tata kelola, laporan keberlanjutan sederhana, serta kesiapan akses pembiayaan dan jejaring hijau.",
+      "Penguatan jejaring industri, akses pasar, legalitas lanjutan, sertifikasi, showcase, dan kemitraan usaha.",
+      "Diarahkan menjadi role model, masuk jejaring kolaborasi, showcase praktik baik, dan perluasan pasar hijau."
+    ];
+
     const QUESTIONS = [
       {
         id: "Q1",
@@ -308,8 +377,14 @@
         no: 12,
         section: "identitas_usaha",
         title: "Sektor usaha",
-        type: "textarea",
-        required: true
+        hint: "Pilih sektor resmi sesuai Excel NSPK terbaru. Jika tidak masuk 5 sektor prioritas, pilih Lainnya dan isi sektor manual.",
+        type: "select",
+        required: true,
+        other: true,
+        options: GREEN_SECTORS.map(sector => ({
+          value: sector.value,
+          label: sector.kbli === "-" ? sector.label : `${sector.label} - KBLI ${sector.kbli}`
+        }))
       },
       {
         id: "Q13",
@@ -990,16 +1065,6 @@
         title: "Apakah Anda memiliki informasi dan masukan tambahan?",
         type: "textarea",
         required: true
-      },
-      {
-        id: "Q64",
-        no: 64,
-        section: "asesor",
-        title: " Pertanyaan untuk asesor: Berikan penilaian asesor selama wawancara berlangsung terkait inisiatif yang dilakukan oleh pelaku usaha.",
-        type: "textarea",
-        required: true,
-        asesorOnly: true,
-        hidden: true
       }
     ];
 
@@ -1222,6 +1287,7 @@
       applyEmployeeDependencyDefaults();
       applyEbtDependencyDefaults();
       const scoreResult = result || calculateScores();
+      const sectorInfo = getSectorInfo();
 
       return {
         id: currentAssessmentId ? Number(currentAssessmentId) : null,
@@ -1236,11 +1302,11 @@
         whatsappNumber: getDisplayAnswer("Q8"),
 
         businessName: getDisplayAnswer("Q10"),
-        businessCode: "",
-        businessType: getDisplayAnswer("Q12"),
+        businessCode: sectorInfo.kbli || "",
+        businessType: sectorInfo.label || getDisplayAnswer("Q12"),
         businessScale: getDisplayAnswer("Q20"),
         establishedYear: getDisplayAnswer("Q11"),
-        businessSector: getDisplayAnswer("Q12"),
+        businessSector: sectorInfo.label || getDisplayAnswer("Q12"),
         totalEmployees: getDisplayAnswer("Q13"),
         maleEmployees: getDisplayAnswer("Q14"),
         femaleEmployees: getDisplayAnswer("Q15"),
@@ -1462,7 +1528,6 @@
 
       if (!String(cleaned.Q1 || "").trim()) cleaned.Q1 = "Mandiri";
       if (!String(cleaned.Q2 || "").trim()) cleaned.Q2 = getAssessmentDateForSave();
-      if (!String(cleaned.Q64 || "").trim()) cleaned.Q64 = "-";
 
       return cleaned;
     }
@@ -1946,38 +2011,284 @@
       const badge = $("#completionBadge");
 
       if (badge) {
-        badge.textContent = `${done}/${questions.length} terisi`;
+          badge.textContent = `${done}/${questions.length} terisi`;
+        }
       }
+
+      function val(qid) {
+        return answers[qid];
+      }
+
+      function arr(qid) {
+        return Array.isArray(answers[qid]) ? answers[qid] : [];
+      }
+
+      function has(qid, value) {
+        return arr(qid).includes(value);
+      }
+
+      function scoreByMap(qid, map) {
+        return map[val(qid)] || 0;
+      }
+
+      function checkboxScoreCap(qid, weights, cap, noneValue) {
+        const selected = arr(qid);
+
+        if (noneValue && selected.includes(noneValue)) return 0;
+
+        const score = selected.reduce((sum, item) => sum + (weights[item] || 0), 0);
+        return Math.min(cap, score);
+      }
+
+      function sumScore(obj, keys) {
+        return keys.reduce((sum, key) => sum + (obj[key] || 0), 0);
+      }
+
+      function normalizeForMatch(value) {
+    return String(value ?? "")
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function getSectorInfo() {
+    const rawValue = val("Q12");
+    const otherValue = answers.Q12_other;
+    const text = normalizeForMatch(rawValue === "other" ? otherValue : rawValue);
+
+    const direct = GREEN_SECTORS.find(sector => sector.value === rawValue);
+    if (direct) {
+      if (direct.value !== "other") return direct;
+
+      const inferred = GREEN_SECTORS.find(sector =>
+        sector.value !== "other" &&
+        sector.keywords.some(keyword => text.includes(normalizeForMatch(keyword)))
+      );
+
+      return inferred || direct;
     }
 
-    function val(qid) {
-      return answers[qid];
+    const inferred = GREEN_SECTORS.find(sector =>
+      sector.value !== "other" &&
+      (
+        text.includes(normalizeForMatch(sector.label)) ||
+        sector.keywords.some(keyword => text.includes(normalizeForMatch(keyword)))
+      )
+    );
+
+    return inferred || GREEN_SECTORS.find(sector => sector.value === "other");
+  }
+
+  function buildAssistanceRecommendations(tier) {
+    const items = [];
+
+    items.push({
+      code: `T${tier}`,
+      type: "Tier",
+      institution: tier <= 0 ? "UNUSA / UWIKA / APINDON UMKM"
+        : tier === 1 ? "UWIKA / UNUSA"
+        : tier === 2 ? "UNUSA / UWIKA / APINDON UMKM"
+        : "APINDON UMKM",
+      title: TIER_LABELS[tier],
+      recommendation: TIER_RECOMMENDATIONS[tier]
+    });
+
+    if (has("Q9", "no_legal") || !has("Q9", "nib")) {
+      items.push({
+        code: "R01",
+        type: "Kebutuhan Khusus",
+        institution: "APINDON UMKM",
+        title: "Legalitas usaha belum kuat",
+        recommendation: "Pendampingan legalitas usaha seperti NIB, NPWP, izin dasar, sertifikasi produk, dan jejaring kelembagaan."
+      });
     }
 
-    function arr(qid) {
-      return Array.isArray(answers[qid]) ? answers[qid] : [];
+    if (val("Q25") === "no") {
+      items.push({
+        code: "R02",
+        type: "Kebutuhan Khusus",
+        institution: "Universitas Nahdlatul Ulama Surabaya",
+        title: "Belum memiliki laporan keuangan",
+        recommendation: "Pendampingan pencatatan usaha dan penyusunan laporan keuangan sederhana."
+      });
     }
 
-    function has(qid, value) {
-      return arr(qid).includes(value);
+    if (val("Q26") === "no") {
+      items.push({
+        code: "R03",
+        type: "Kebutuhan Khusus",
+        institution: "Universitas Nahdlatul Ulama Surabaya",
+        title: "Keuangan pribadi dan usaha belum dipisah",
+        recommendation: "Pendampingan pemisahan keuangan pribadi dan bisnis, arus kas, serta pencatatan transaksi usaha."
+      });
     }
 
-    function scoreByMap(qid, map) {
-      return map[val(qid)] || 0;
+    if (val("Q24") === "no") {
+      items.push({
+        code: "R04",
+        type: "Kebutuhan Khusus",
+        institution: "UNUSA / Universitas Widya Kartika Surabaya",
+        title: "Belum menerapkan Green SOP",
+        recommendation: "Pendampingan penyusunan Green SOP sederhana sesuai karakteristik proses produksi/usaha."
+      });
     }
 
-    function checkboxScoreCap(qid, weights, cap, noneValue) {
-      const selected = arr(qid);
-
-      if (noneValue && selected.includes(noneValue)) return 0;
-
-      const score = selected.reduce((sum, item) => sum + (weights[item] || 0), 0);
-      return Math.min(cap, score);
+    if (["none", "making"].includes(val("Q29"))) {
+      items.push({
+        code: "R05",
+        type: "Kebutuhan Khusus",
+        institution: "UNUSA / Universitas Widya Kartika Surabaya",
+        title: "Sustainability Report belum matang",
+        recommendation: "Pendampingan penyusunan laporan keberlanjutan sederhana dan dokumentasi dampak usaha."
+      });
     }
 
-    function sumScore(obj, keys) {
-      return keys.reduce((sum, key) => sum + (obj[key] || 0), 0);
+    if (val("Q38") !== "routine") {
+      items.push({
+        code: "R06",
+        type: "Kebutuhan Khusus",
+        institution: "UNUSA / Universitas Widya Kartika Surabaya",
+        title: "Carbon footprint belum diukur rutin",
+        recommendation: "Pendampingan pengukuran awal jejak karbon dan pencatatan data lingkungan dasar."
+      });
     }
+
+    if (val("Q48") === "none") {
+      items.push({
+        code: "R07",
+        type: "Kebutuhan Khusus",
+        institution: "APINDON UMKM",
+        title: "Supplier belum memakai kriteria keberlanjutan",
+        recommendation: "Pendampingan jejaring pemasok, kurasi supplier, dan kemitraan rantai pasok yang lebih berkelanjutan."
+      });
+    }
+
+    if (val("Q56") === "never") {
+      items.push({
+        code: "R08",
+        type: "Kebutuhan Khusus",
+        institution: "UNUSA / Universitas Widya Kartika Surabaya",
+        title: "Promosi digital hijau belum berjalan",
+        recommendation: "Pendampingan komunikasi, promosi digital, dan narasi praktik hijau UMKM."
+      });
+    }
+
+    if (val("Q44") === "looking") {
+      items.push({
+        code: "R09",
+        type: "Kebutuhan Khusus",
+        institution: "Temani",
+        title: "Butuh akses pembiayaan hijau",
+        recommendation: "Pendampingan kesiapan akses pembiayaan hijau, proposal kebutuhan investasi, dan koneksi jejaring pembiayaan."
+      });
+    }
+
+    if (["incomplete", "none"].includes(val("Q60"))) {
+      items.push({
+        code: "R10",
+        type: "Kebutuhan Khusus",
+        institution: "UNUSA / Universitas Widya Kartika Surabaya",
+        title: "APD belum lengkap",
+        recommendation: "Pendampingan aspek K3 dasar, penyediaan APD sesuai risiko kerja, dan tata kelola keselamatan karyawan."
+      });
+    }
+
+    if (val("Q41") === "none" || val("Q42") === "no" || ["planned", "no_plan"].includes(val("Q46"))) {
+      items.push({
+        code: "R11",
+        type: "Kebutuhan Khusus",
+        institution: "Melati Nusantara",
+        title: "Perencanaan keuangan hijau perlu diperkuat",
+        recommendation: "Pendampingan literasi keuangan, perencanaan keuangan usaha, dan edukasi pengelolaan biaya lingkungan."
+      });
+    }
+
+    return items;
+  }
+
+  function buildInstitutionSummary(assistanceRecommendations) {
+    const map = new Map();
+
+    assistanceRecommendations.forEach(item => {
+      String(item.institution || "")
+        .split("/")
+        .map(x => x.trim())
+        .filter(Boolean)
+        .forEach(name => map.set(name, (map.get(name) || 0) + 1));
+    });
+
+    return Array.from(map.entries()).map(([institution, count]) => ({
+      institution,
+      count
+    }));
+  }
+
+  function buildSectorAssessment(qScores, total, tier) {
+    const sector = getSectorInfo();
+
+    const indicators = [
+      { code: "I01", type: "mandatory", title: "Legalitas dasar", passed: !has("Q9", "no_legal") && (qScores.Q9 || 0) > 0 },
+      { code: "I02", type: "mandatory", title: "Visi keberlanjutan", passed: (qScores.Q23 || 0) > 0 },
+      { code: "I03", type: "mandatory", title: "Green SOP", passed: (qScores.Q24 || 0) > 0 },
+      { code: "I04", type: "mandatory", title: "Laporan keuangan", passed: (qScores.Q25 || 0) > 0 },
+      { code: "I05", type: "mandatory", title: "Pemisahan keuangan", passed: (qScores.Q26 || 0) > 0 },
+      { code: "I06", type: "mandatory", title: "Dokumentasi dampak", passed: (qScores.Q27 || 0) > 0 },
+      { code: "I07", type: "mandatory", title: "Energi baru/energi bersih", passed: (qScores.Q30 || 0) > 0 || (qScores.Q31 || 0) > 0 || (qScores.Q32 || 0) > 0 },
+      { code: "I08", type: "mandatory", title: "Praktik hemat energi", passed: (qScores.Q33 || 0) > 0 },
+      { code: "I09", type: "mandatory", title: "Sistem 3R", passed: (qScores.Q34 || 0) > 0 },
+      { code: "I10", type: "mandatory", title: "Pengolahan/upcycling limbah", passed: (qScores.Q35 || 0) > 0 },
+      { code: "I11", type: "mandatory", title: "Bahan baku ramah lingkungan", passed: (qScores.Q36 || 0) > 0 },
+      { code: "I12", type: "mandatory", title: "Pengurangan dampak SDA", passed: (qScores.Q37 || 0) > 0 },
+      { code: "I13", type: "mandatory", title: "Kemasan ramah lingkungan", passed: (qScores.Q49 || 0) > 0 },
+      { code: "I14", type: "mandatory", title: "Supplier berkelanjutan", passed: (qScores.Q48 || 0) > 0 },
+      { code: "I15", type: "mandatory", title: "K3/APD minimum", passed: (qScores.Q60 || 0) > 0 },
+
+      { code: "C01", type: "complementary", title: "Carbon footprint", passed: (qScores.Q38 || 0) > 0 },
+      { code: "C02", type: "complementary", title: "Program penghematan air", passed: (qScores.Q40 || 0) > 0 },
+      { code: "C03", type: "complementary", title: "Alokasi biaya lingkungan", passed: (qScores.Q41 || 0) > 0 },
+      { code: "C04", type: "complementary", title: "Pembiayaan hijau", passed: (qScores.Q44 || 0) > 0 },
+      { code: "C05", type: "complementary", title: "Investasi hijau/R&D", passed: (qScores.Q46 || 0) > 0 },
+      { code: "C06", type: "complementary", title: "Pemberdayaan masyarakat lokal", passed: (qScores.Q51 || 0) > 0 },
+      { code: "C07", type: "complementary", title: "Mitra strategis", passed: (qScores.Q54 || 0) > 0 },
+      { code: "C08", type: "complementary", title: "Promosi digital hijau", passed: (qScores.Q56 || 0) > 0 },
+      { code: "C09", type: "complementary", title: "Pelatihan keberlanjutan", passed: (qScores.Q58 || 0) > 0 }
+    ];
+
+    const passedTotal = indicators.filter(item => item.passed).length;
+    const mandatoryPassed = indicators.filter(item => item.type === "mandatory" && item.passed).length;
+    const complementaryPassed = indicators.filter(item => item.type === "complementary" && item.passed).length;
+
+    const requiredTotal = tier >= 4 ? 21 : tier >= 1 ? 17 : 0;
+    const requiredMandatory =
+      tier >= 4 ? 15 :
+      tier >= 3 ? Math.min(sector.mandatoryTarget || 12, 12) :
+      tier >= 2 ? 8 :
+      tier >= 1 ? 5 :
+      0;
+
+    const eligibleByIndicators =
+      tier === 0 ||
+      (passedTotal >= requiredTotal && mandatoryPassed >= requiredMandatory);
+
+    return {
+      sector: sector.label,
+      kbli: sector.kbli,
+      totalIndicators: indicators.length,
+      passedTotal,
+      mandatoryTarget: sector.mandatoryTarget,
+      complementaryTarget: sector.complementaryTarget,
+      mandatoryPassed,
+      complementaryPassed,
+      requiredTotal,
+      requiredMandatory,
+      eligibleByIndicators,
+      indicators,
+      note: eligibleByIndicators
+        ? "Indikator sektor sudah cukup mendukung tier hasil scoring."
+        : "Skor total sudah dihitung, tetapi indikator sektor belum cukup kuat untuk mendukung kenaikan tier menurut pendekatan mandatory/complementary."
+    };
+  }
 
     function calculateScores() {
       const qScores = {};
@@ -2128,21 +2439,9 @@
         else tier = 4;
       }
 
-      const tierLabels = [
-        "Tier 0 - Pra Hijau",
-        "Tier 1 - Konvensional",
-        "Tier 2 - Transisi Hijau",
-        "Tier 3 - UMKM Hijau",
-        "Tier 4 - Pemimpin Keberlanjutan"
-      ];
-
-      const recommendations = [
-        "Prioritas kritis: urus legalitas, perbaiki kepatuhan UMR, pisahkan keuangan, siapkan laporan keuangan, dan lengkapi APD.",
-        "Fokus: mulai Green SOP sederhana, dokumentasi dampak, penghematan energi/air, dan pencatatan keuangan lebih rapi.",
-        "Fokus: sistemkan praktik hijau, buat laporan keberlanjutan, mulai seleksi pemasok hijau, dan cari pembiayaan hijau.",
-        "Fokus: ukur carbon footprint rutin, perluas kemitraan strategis, publikasikan laporan, dan alokasikan investasi hijau.",
-        "Excellent. Usaha dapat menjadi role model, memperluas pasar hijau, dan memimpin inisiatif keberlanjutan."
-      ];
+      const assistanceRecommendations = buildAssistanceRecommendations(tier);
+      const institutionSummary = buildInstitutionSummary(assistanceRecommendations);
+      const sectorAssessment = buildSectorAssessment(qScores, total, tier);
 
       const eScore = sumScore(qScores, ["Q30", "Q31", "Q32", "Q33", "Q34", "Q35", "Q36", "Q37", "Q38", "Q40", "Q49", "Q56"]);
       const sScore = sumScore(qScores, ["Q19", "Q22", "Q51", "Q58", "Q59", "Q60", "Q61", "Q62"]);
@@ -2158,8 +2457,11 @@
         sections,
         total,
         tier,
-        tierLabel: tierLabels[tier],
-        recommendation: recommendations[tier],
+        tierLabel: TIER_LABELS[tier],
+        recommendation: TIER_RECOMMENDATIONS[tier],
+        assistanceRecommendations,
+        institutionSummary,
+        sectorAssessment,
         disqualifiedReasons,
         eScore,
         sScore,
@@ -2317,6 +2619,20 @@
             ${renderEsgCard("G", "Governance / Tata Kelola", result.gScore, 470)}
           </div>
 
+          <div class="section-title-line">
+            <h3>Rekomendasi Pendampingan</h3>
+            <span>Berdasarkan sheet Rekomendasi Pendampingan Excel terbaru</span>
+          </div>
+
+          ${renderAssistanceRecommendations(result.assistanceRecommendations)}
+
+          <div class="section-title-line">
+            <h3>Penilaian Sektor</h3>
+            <span>Mapping sektor resmi dan readiness indikator</span>
+          </div>
+
+          ${renderSectorAssessment(result.sectorAssessment)}
+
           <div class="recommendation-grid">
             <div class="alert">
               <strong>Prioritas Terendah</strong>
@@ -2349,6 +2665,68 @@
             </div>
           </details>
         </section>
+      `;
+    }
+
+    function renderAssistanceRecommendations(items) {
+      const rows = Array.isArray(items) ? items : [];
+
+      if (!rows.length) {
+        return `
+          <div class="alert soft">
+            <strong>Rekomendasi Pendampingan</strong>
+            <p>Belum ada rekomendasi pendampingan dari data scoring.</p>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kode</th>
+                <th>Jenis</th>
+                <th>Mitra</th>
+                <th>Fokus</th>
+                <th>Rekomendasi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(item => `
+                <tr>
+                  <td><strong>${escapeHtml(item.code)}</strong></td>
+                  <td>${escapeHtml(item.type)}</td>
+                  <td>${escapeHtml(item.institution)}</td>
+                  <td>${escapeHtml(item.title)}</td>
+                  <td>${escapeHtml(item.recommendation)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderSectorAssessment(sectorAssessment) {
+      if (!sectorAssessment) return "";
+
+      const percent = Math.round((sectorAssessment.passedTotal / Math.max(sectorAssessment.totalIndicators, 1)) * 100);
+
+      return `
+        <div class="alert soft">
+          <strong>Penilaian Sektor / KBLI</strong>
+          <p>
+            Sektor resmi: <strong>${escapeHtml(sectorAssessment.sector)}</strong>
+            ${sectorAssessment.kbli && sectorAssessment.kbli !== "-" ? `• KBLI ${escapeHtml(sectorAssessment.kbli)}` : ""}
+          </p>
+          <p>
+            Indikator terpenuhi: <strong>${sectorAssessment.passedTotal}/${sectorAssessment.totalIndicators}</strong>
+            (${percent}%). Mandatory terpenuhi:
+            <strong>${sectorAssessment.mandatoryPassed}/${sectorAssessment.mandatoryTarget || 15}</strong>.
+          </p>
+          <p>${escapeHtml(sectorAssessment.note)}</p>
+        </div>
       `;
     }
 
