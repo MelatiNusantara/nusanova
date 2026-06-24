@@ -44,6 +44,7 @@
         currentDetail = await adminFetch("/api/admin/users/" + encodeURIComponent(id) + "/dashboard");
         document.getElementById("mount").outerHTML = renderDetail(currentDetail);
         bindDetailCharts();
+        bindDetailActions();
         drawDetailCharts();
       } catch (error) {
         document.getElementById("mount").outerHTML = `
@@ -83,16 +84,22 @@
       const totalScore = toNumber(data.totalScore || data.score || scores.total);
       const scorePercent = getScorePercent(totalScore);
       const completeCount = toNumber(data.completeCount || data.answeredCount);
-      const totalQuestion = toNumber(data.totalQuestion || data.questionCount, 64);
+      const totalQuestion = toNumber(data.totalQuestion || data.questionCount, OFFICIAL_QUESTION_TOTAL);
       const statusClass = getStatusClass(data.status);
       const tierLabel = data.tier || data.tierLabel || scores.tierLabel || "-";
       const recommendation = scores.recommendation || "Rekomendasi belum tersedia dari data scoring.";
       const weakest = getLowestSections(sections);
       const esgCards = getDetailESG(scores);
+      const assistanceRecommendations = getAssistanceRecommendationsFromScores(scores);
+      const sectorAssessment = getSectorAssessmentFromScores(scores);
 
       return `
         <section class="hero card detail-hero index-like-detail-hero">
-          <a class="btn secondary" href="admin-list-user.html" style="position:relative;z-index:2;margin-bottom:18px;width:fit-content;">← Kembali ke List User</a>
+          <div style="position:relative;z-index:2;margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <a class="btn secondary" href="admin-list-user.html">← Kembali ke List User</a>
+            <button class="btn primary" id="detailRecalculateBtn" type="button">Hitung Ulang Scoring</button>
+            <small id="detailRecalculateInfo"></small>
+          </div>
           <div class="hero-main">
             <div class="eyebrow">Detail User • Dashboard Assessment</div>
             <h1>${escapeHtml(data.businessName || data.business || "Detail User")}</h1>
@@ -130,9 +137,9 @@
 
           <article class="card profile-card">
             <h2>Kelengkapan Data</h2>
-            <p><span>Terisi</span><strong>${formatNumber(completeCount)} / ${formatNumber(totalQuestion)} pertanyaan</strong></p>
+            <p><span>Terisi </span><strong>${formatNumber(completeCount)} / ${formatNumber(totalQuestion)} pertanyaan</strong></p>
             <div class="bar"><i style="width:${Math.max(0, Math.min(100, Math.round((completeCount / Math.max(totalQuestion, 1)) * 100)))}%"></i></div>
-            <p style="margin-top:14px;"><span>Submitted At</span><strong>${escapeHtml(formatDateTime(data.submittedAt || data.createdAt || data.updatedAt))}</strong></p>
+            <p style="margin-top:14px;"><span>Submitted At </span><strong>${escapeHtml(formatDateTime(data.submittedAt || data.createdAt || data.updatedAt))}</strong></p>
           </article>
         </section>
 
@@ -159,6 +166,25 @@
               </article>
             `;
           }).join("")}
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Rekomendasi Pendampingan</h2>
+            </div>
+          </div>
+          ${renderAssistanceDetailTable(assistanceRecommendations)}
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Penilaian Sektor</h2>
+              <p>Mapping sektor resmi dan kesiapan indikator mandatory/complementary.</p>
+            </div>
+          </div>
+          ${renderSectorDetail(sectorAssessment)}
         </section>
 
         <section class="note-grid">
@@ -235,11 +261,62 @@
 
         <section class="admin-panel card">
           <div class="admin-panel-head">
-            <div><h2>Jawaban Lengkap</h2><p>Seluruh jawaban user yang dikirim dari database.</p></div>
+            <div><h2>Jawaban Lengkap</h2></div>
           </div>
           ${renderAnswers(answers)}
         </section>
       `;
+    }
+
+    function bindDetailActions() {
+      document.getElementById("detailRecalculateBtn")?.addEventListener("click", recalculateAssessmentsFromDetail);
+    }
+
+    async function recalculateAssessmentsFromDetail() {
+      const button = document.getElementById("detailRecalculateBtn");
+      const info = document.getElementById("detailRecalculateInfo");
+
+      const confirmed = confirm(
+        "Hitung ulang scoring untuk semua data SUBMITTED?\n\nSetelah selesai, halaman detail ini akan dimuat ulang."
+      );
+
+      if (!confirmed) return;
+
+      const oldText = button?.textContent || "Hitung Ulang Scoring";
+
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Menghitung ulang...";
+        }
+
+        if (info) {
+          info.textContent = "Sedang menghitung ulang...";
+        }
+
+        const result = await adminFetch("/api/admin/assessments/recalculate", {
+          method: "POST"
+        });
+
+        alert(`Berhasil menghitung ulang ${formatNumber(result.total || 0)} data submitted.`);
+
+        await render();
+
+      } catch (error) {
+        console.error(error);
+
+        if (info) {
+          info.textContent = `Gagal: ${error.message}`;
+        }
+
+        alert(`Gagal menghitung ulang scoring: ${error.message}`);
+
+      } finally {
+        if (button && document.body.contains(button)) {
+          button.disabled = false;
+          button.textContent = oldText;
+        }
+      }
     }
 
     function bindDetailCharts() {
@@ -297,6 +374,61 @@
         </div>
       `;
     }
+
+    function renderAssistanceDetailTable(items) {
+  const rows = Array.isArray(items) ? items : [];
+
+  if (!rows.length) {
+    return `<div class="empty">Belum ada rekomendasi pendampingan pada data scoring ini.</div>`;
+  }
+
+  return `
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Jenis</th>
+            <th>Mitra</th>
+            <th>Fokus</th>
+            <th>Rekomendasi</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(item => `
+            <tr>
+              <td><strong>${escapeHtml(item.code || "-")}</strong></td>
+              <td>${escapeHtml(item.type || "-")}</td>
+              <td>${escapeHtml(item.institution || "-")}</td>
+              <td>${escapeHtml(item.title || "-")}</td>
+              <td>${escapeHtml(item.recommendation || "-")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderSectorDetail(sectorAssessment) {
+  if (!sectorAssessment) {
+    return `<div class="empty">Data penilaian sektor belum tersedia. Data lama perlu dihitung ulang / submit ulang.</div>`;
+  }
+
+  const percent = Math.round((toNumber(sectorAssessment.passedTotal) / Math.max(toNumber(sectorAssessment.totalIndicators), 1)) * 100);
+
+  return `
+    <div class="detail-info-grid">
+      <div><span>Sektor Resmi</span><strong>${escapeHtml(sectorAssessment.sector || "-")}</strong></div>
+      <div><span>KBLI</span><strong>${escapeHtml(sectorAssessment.kbli || "-")}</strong></div>
+      <div><span>Indikator Terpenuhi</span><strong>${formatNumber(sectorAssessment.passedTotal)} / ${formatNumber(sectorAssessment.totalIndicators)}</strong></div>
+      <div><span>Mandatory</span><strong>${formatNumber(sectorAssessment.mandatoryPassed)} / ${formatNumber(sectorAssessment.mandatoryTarget || 15)}</strong></div>
+    </div>
+
+    <div class="bar" style="margin-top:16px;"><i style="width:${Math.max(0, Math.min(100, percent))}%"></i></div>
+    <p style="margin-top:12px;">${escapeHtml(sectorAssessment.note || "")}</p>
+  `;
+}
 
 function renderSections(sections) {
       if (!sections.length) {
