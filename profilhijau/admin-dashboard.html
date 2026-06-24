@@ -503,6 +503,16 @@
       }
     }
 
+    function renderSummaryLabel(row, labelTitle) {
+      const label = escapeHtml(row.label || "-");
+
+      if (labelTitle !== "Lembaga" || !row.url) {
+        return label;
+      }
+
+      return `<a class="institution-link" href="${escapeAttr(row.url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+
     function renderSummaryTable(items, labelTitle) {
       const rows = items || [];
       const total = rows.reduce((sum, item) => sum + toNumber(item.value), 0);
@@ -516,7 +526,7 @@
             <tbody>
               ${rows.map(row => `
                 <tr>
-                  <td>${escapeHtml(row.label)}</td>
+                  <td>${renderSummaryLabel(row, labelTitle)}</td>
                   <td><strong>${formatNumber(row.value)}</strong></td>
                   <td>${total ? Math.round(toNumber(row.value) / total * 100) : 0}%</td>
                 </tr>
