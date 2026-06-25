@@ -1485,9 +1485,17 @@
     }
 
     function renderInstitutionLinks(item) {
-      const links = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
+      const rawLinks = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
         ? item.institutionLinks
         : getInstitutionLinks(item?.institution);
+
+      const links = rawLinks.map(link => {
+        const name = canonicalInstitutionName(link.name || "");
+        return {
+          name,
+          url: INSTITUTION_CONTACTS[name] || link.url || ""
+        };
+      });
 
       if (!links.length) return "-";
 
