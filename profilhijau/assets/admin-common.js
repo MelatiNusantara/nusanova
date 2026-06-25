@@ -119,17 +119,25 @@ function getInstitutionLinks(institutionText) {
 }
 
 function renderInstitutionLinks(item) {
-  const links = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
+  const rawLinks = Array.isArray(item?.institutionLinks) && item.institutionLinks.length
     ? item.institutionLinks
     : getInstitutionLinks(item?.institution);
+
+  const links = rawLinks.map(link => {
+    const name = canonicalInstitutionName(link.name || "");
+    return {
+      name,
+      url: INSTITUTION_CONTACTS[name] || link.url || ""
+    };
+  });
 
   if (!links.length) return "-";
 
   return links.map(link => {
     const name = escapeHtml(link.name);
     return link.url
-        ? `<a class="institution-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
-        : name;
+      ? `<a class="institution-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener noreferrer">${name}</a>`
+      : name;
   }).join(" / ");
 }
 
@@ -1094,11 +1102,18 @@ function buildAssistanceSummaryFromAssessments(assessments) {
         const name = link.name || "";
         if (!name) return;
 
+        const currentUrl = INSTITUTION_CONTACTS[name] || link.url || "";
+
         const current = map.get(name) || {
           label: name,
           value: 0,
-          url: link.url || ""
+          url: currentUrl
         };
+
+        current.value += 1;
+        current.url = currentUrl || current.url || "";
+
+        map.set(name, current);
 
         current.value += 1;
         current.url = current.url || link.url || "";
