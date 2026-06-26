@@ -16,6 +16,7 @@
 
     let cachedUsers = [];
     let currentFilteredUsers = [];
+    let exportDetailCache = new Map();
 
     let userListState = {
       keyword: "",
@@ -346,7 +347,110 @@
       };
     }
 
-    function exportUsersToExcel() {
+    function mergeUserWithDashboardDetail(user, detail) {
+      const safeUser = user || {};
+      const safeDetail = detail || {};
+
+      return {
+        ...safeUser,
+        ...safeDetail,
+
+        id: safeUser.id ?? safeDetail.id,
+
+        businessName: safeDetail.businessName
+          || safeDetail.business
+          || safeUser.businessName
+          || safeUser.business,
+
+        respondentName: safeDetail.respondentName
+          || safeDetail.name
+          || safeUser.respondentName
+          || safeUser.name,
+
+        assessorName: safeDetail.assessorName
+          || safeDetail.asesorName
+          || safeDetail.asesor
+          || safeUser.assessorName
+          || safeUser.asesorName
+          || safeUser.asesor,
+
+        whatsappNumber: safeDetail.whatsappNumber
+          || safeDetail.whatsapp
+          || safeUser.whatsappNumber
+          || safeUser.whatsapp,
+
+        city: safeDetail.city || safeUser.city,
+        province: safeDetail.province || safeUser.province,
+        sector: safeDetail.sector || safeUser.sector,
+        tier: safeDetail.tier || safeDetail.tierLabel || safeUser.tier || safeUser.tierLabel,
+        status: safeDetail.status || safeUser.status,
+
+        totalScore: safeDetail.totalScore
+          ?? safeDetail.score
+          ?? safeDetail.scores?.total
+          ?? safeUser.totalScore
+          ?? safeUser.score
+          ?? safeUser.result?.total,
+
+        inputDate: safeUser.inputDate
+          || safeUser.createdAt
+          || safeUser.submittedAt
+          || safeUser.updatedAt
+          || safeDetail.submittedAt
+          || safeDetail.createdAt
+          || safeDetail.updatedAt,
+
+        answers: safeDetail.answers
+          || safeDetail.responses
+          || safeDetail.formAnswers
+          || safeDetail.assessmentAnswers
+          || safeUser.answers
+          || {}
+      };
+    }
+
+    async function fetchUserDashboardForExport(user) {
+      const userId = user?.id;
+
+      if (!userId) {
+        return user;
+      }
+
+      const cacheKey = String(userId);
+
+      if (exportDetailCache.has(cacheKey)) {
+        return exportDetailCache.get(cacheKey);
+      }
+
+      const detail = await adminFetch(
+        "/api/admin/users/" + encodeURIComponent(userId) + "/dashboard"
+      );
+
+      const merged = mergeUserWithDashboardDetail(user, detail);
+
+      exportDetailCache.set(cacheKey, merged);
+
+      return merged;
+    }
+
+    async function fetchUsersDashboardForExport(users, onProgress) {
+      const result = [];
+
+      for (let index = 0; index < users.length; index += 1) {
+        const user = users[index];
+
+        if (typeof onProgress === "function") {
+          onProgress(index + 1, users.length);
+        }
+
+        const detailUser = await fetchUserDashboardForExport(user);
+        result.push(detailUser);
+      }
+
+      return result;
+    }
+
+    async function exportUsersToExcel() {
       if (typeof XLSX === "undefined") {
         alert("Library Excel belum ter-load. Pastikan xlsx.full.min.js sudah dipasang.");
         return;
@@ -361,47 +465,77 @@
         return;
       }
 
-      const exportData = buildExportData(users);
+      const button = document.getElementById("userExportExcelBtn");
+      const oldButtonText = button?.textContent || "Export Excel";
 
-      if (!exportData.rows.length) {
-        alert("Tidak ada data untuk diexport.");
-        return;
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = `Mengambil detail 0/${users.length}...`;
+        }
+
+        const usersWithAnswers = await fetchUsersDashboardForExport(users, (current, total) => {
+          if (button) {
+            button.textContent = `Mengambil detail ${current}/${total}...`;
+          }
+        });
+
+        if (button) {
+          button.textContent = "Membuat Excel...";
+        }
+
+        const exportData = buildExportData(usersWithAnswers);
+
+        if (!exportData.rows.length) {
+          alert("Tidak ada data untuk diexport.");
+          return;
+        }
+
+        const hasQuestionColumn = exportData.headers.some(header => /^Q\d+/i.test(header));
+
+        if (!hasQuestionColumn) {
+          alert("Data jawaban Q1 sampai selesai belum ditemukan dari API detail user.");
+          return;
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData.rows, {
+          header: exportData.headers
+        });
+
+        worksheet["!cols"] = exportData.headers.map(header => ({
+          wch: Math.min(Math.max(String(header).length + 4, 18), 70)
+        }));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Jawaban User");
+
+        const date = new Date().toISOString().slice(0, 10);
+
+        const filterName = [
+          userListState.keyword ? `keyword-${userListState.keyword}` : "",
+          userListState.fromDate ? `from-${userListState.fromDate}` : "",
+          userListState.toDate ? `to-${userListState.toDate}` : ""
+        ]
+          .filter(Boolean)
+          .join("-")
+          .replace(/[^\w-]/g, "_");
+
+        const fileName = filterName
+          ? `export-jawaban-user-${filterName}-${date}.xlsx`
+          : `export-jawaban-user-${date}.xlsx`;
+
+        XLSX.writeFile(workbook, fileName);
+
+      } catch (error) {
+        console.error(error);
+        alert(`Gagal export Excel: ${error.message}`);
+
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = oldButtonText;
+        }
       }
-
-      const hasQuestionColumn = exportData.headers.some(header => /^Q\d+/i.test(header));
-
-      if (!hasQuestionColumn) {
-        alert("Data jawaban Q1 sampai selesai belum ditemukan di response /api/admin/users. Cek apakah field answers/responses sudah dikirim dari backend.");
-        return;
-      }
-
-      const worksheet = XLSX.utils.json_to_sheet(exportData.rows, {
-        header: exportData.headers
-      });
-
-      worksheet["!cols"] = exportData.headers.map(header => ({
-        wch: Math.min(Math.max(String(header).length + 4, 18), 70)
-      }));
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Jawaban User");
-
-      const date = new Date().toISOString().slice(0, 10);
-
-      const filterName = [
-        userListState.keyword ? `keyword-${userListState.keyword}` : "",
-        userListState.fromDate ? `from-${userListState.fromDate}` : "",
-        userListState.toDate ? `to-${userListState.toDate}` : ""
-      ]
-        .filter(Boolean)
-        .join("-")
-        .replace(/[^\w-]/g, "_");
-
-      const fileName = filterName
-        ? `export-jawaban-user-${filterName}-${date}.xlsx`
-        : `export-jawaban-user-${date}.xlsx`;
-
-      XLSX.writeFile(workbook, fileName);
     }
 
     async function render() {
@@ -449,6 +583,7 @@
 
             <button class="btn primary search-user-btn" id="userSearchBtn" type="button">Search</button>
             <button class="btn secondary" id="userResetBtn" type="button">Reset</button>
+            <button class="btn secondary" id="userExportExcelBtn" type="button">Export Excel</button>
           </div>
         </section>
 
