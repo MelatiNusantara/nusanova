@@ -9,11 +9,13 @@
 <body>
   <div id="root"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="assets/admin-common.js"></script>
   <script>
     const USER_PAGE_SIZE = 10;
 
     let cachedUsers = [];
+    let currentFilteredUsers = [];
 
     let userListState = {
       keyword: "",
@@ -54,6 +56,352 @@
 
     if (requireAdmin()) {
       render();
+    }
+
+    function toDateOnly(value) {
+      if (!value) return "";
+
+      const text = String(value).trim();
+
+      const directDate = text.match(/^\d{4}-\d{2}-\d{2}/);
+      if (directDate) {
+        return directDate[0];
+      }
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function isUserMatchDateFilter(user) {
+      const userDate = toDateOnly(getUserInputDate(user));
+
+      if (!userListState.fromDate && !userListState.toDate) {
+        return true;
+      }
+
+      if (!userDate) {
+        return false;
+      }
+
+      if (userListState.fromDate && userDate < userListState.fromDate) {
+        return false;
+      }
+
+      if (userListState.toDate && userDate > userListState.toDate) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function getUsersForActiveFilter() {
+      const users = cachedUsers || [];
+
+      const keyword = normalizeText(userListState.keyword);
+
+      return users.filter(user => {
+        const keywordMatch = !keyword || normalizeText([
+          user.id,
+          getBusinessName(user),
+          getRespondentName(user),
+          getasesorName(user),
+          user.whatsappNumber,
+          user.city,
+          user.province,
+          user.sector,
+          user.tier,
+          user.status
+        ].join(" ")).includes(keyword);
+
+        return keywordMatch && isUserMatchDateFilter(user);
+      });
+    }
+
+    function getQuestionNumber(value) {
+      const text = String(value || "").trim();
+
+      const match = text.match(/(?:^|[^a-zA-Z])q\s*[-_.]?\s*(\d+)(?:[^0-9]|$)/i)
+        || text.match(/question\s*[-_.]?\s*(\d+)/i)
+        || text.match(/answer\s*[-_.]?\s*(\d+)/i);
+
+      return match ? Number(match[1]) : null;
+    }
+
+    function formatExportValue(value) {
+      if (value === null || value === undefined) return "";
+
+      if (Array.isArray(value)) {
+        return value.map(formatExportValue).filter(Boolean).join("; ");
+      }
+
+      if (typeof value === "object") {
+        return formatExportValue(
+          value.answer
+          ?? value.value
+          ?? value.label
+          ?? value.text
+          ?? value.name
+          ?? JSON.stringify(value)
+        );
+      }
+
+      return String(value);
+    }
+
+    function getAnswerFromItem(item) {
+      if (!item || typeof item !== "object") return "";
+
+      return item.answer
+        ?? item.answerValue
+        ?? item.value
+        ?? item.response
+        ?? item.responseText
+        ?? item.selectedAnswer
+        ?? item.selectedValue
+        ?? item.option
+        ?? item.text
+        ?? "";
+    }
+
+    function getQuestionLabelFromItem(item, fallbackKey, questionNumber) {
+      if (!item || typeof item !== "object") {
+        return `Q${questionNumber || ""}`;
+      }
+
+      const questionText = item.question
+        ?? item.questionText
+        ?? item.questionLabel
+        ?? item.label
+        ?? item.title
+        ?? item.name
+        ?? "";
+
+      if (questionText) {
+        return `Q${questionNumber} - ${questionText}`;
+      }
+
+      return fallbackKey ? `Q${questionNumber} - ${fallbackKey}` : `Q${questionNumber}`;
+    }
+
+    function extractQuestionAnswers(user) {
+      const result = [];
+
+      const possibleSources = [
+        user?.answers,
+        user?.responses,
+        user?.formAnswers,
+        user?.assessmentAnswers,
+        user?.questionAnswers,
+        user?.questionnaireAnswers,
+        user?.questions,
+        user?.questionnaire,
+        user?.result?.answers,
+        user?.result?.responses,
+        user
+      ].filter(Boolean);
+
+      possibleSources.forEach(source => {
+        if (Array.isArray(source)) {
+          source.forEach(item => {
+            const rawKey = item?.key
+              ?? item?.code
+              ?? item?.questionCode
+              ?? item?.questionKey
+              ?? item?.questionNo
+              ?? item?.questionNumber
+              ?? item?.number
+              ?? item?.id;
+
+            const questionNumber = getQuestionNumber(rawKey) || getQuestionNumber(item?.question);
+
+            if (!questionNumber) return;
+
+            result.push({
+              number: questionNumber,
+              key: `q${questionNumber}`,
+              header: getQuestionLabelFromItem(item, rawKey, questionNumber),
+              answer: formatExportValue(getAnswerFromItem(item))
+            });
+          });
+
+          return;
+        }
+
+        if (typeof source === "object") {
+          Object.entries(source).forEach(([key, value]) => {
+            const questionNumber = getQuestionNumber(key);
+
+            if (!questionNumber) return;
+
+            let header = `Q${questionNumber}`;
+            let answer = value;
+
+            if (value && typeof value === "object" && !Array.isArray(value)) {
+              header = getQuestionLabelFromItem(value, key, questionNumber);
+              answer = getAnswerFromItem(value);
+            }
+
+            result.push({
+              number: questionNumber,
+              key: `q${questionNumber}`,
+              header,
+              answer: formatExportValue(answer)
+            });
+          });
+        }
+      });
+
+      const unique = new Map();
+
+      result.forEach(item => {
+        if (!unique.has(item.key) || !unique.get(item.key).answer) {
+          unique.set(item.key, item);
+        }
+      });
+
+      return Array.from(unique.values()).sort((a, b) => a.number - b.number);
+    }
+
+    function buildExportData(users) {
+      const questionHeaderMap = new Map();
+      const userAnswerMaps = [];
+
+      users.forEach(user => {
+        const answers = extractQuestionAnswers(user);
+        const answerMap = new Map();
+
+        answers.forEach(item => {
+          if (!questionHeaderMap.has(item.key)) {
+            questionHeaderMap.set(item.key, {
+              number: item.number,
+              header: item.header
+            });
+          }
+
+          answerMap.set(item.key, item.answer);
+        });
+
+        userAnswerMaps.push({
+          user,
+          answerMap
+        });
+      });
+
+      const questionHeaders = Array.from(questionHeaderMap.entries())
+        .sort((a, b) => a[1].number - b[1].number)
+        .map(([key, value]) => ({
+          key,
+          header: value.header
+        }));
+
+      const headers = [
+        "Nama User",
+        "Nama Usaha",
+        "Nama Asesor",
+        "WhatsApp",
+        "Kota",
+        "Provinsi",
+        "Sektor",
+        "Skor",
+        "Tier",
+        "Status",
+        "Tanggal Input",
+        ...questionHeaders.map(item => item.header)
+      ];
+
+      const rows = userAnswerMaps.map(({ user, answerMap }) => {
+        const row = {
+          "Nama User": getRespondentName(user),
+          "Nama Usaha": getBusinessName(user),
+          "Nama Asesor": getasesorName(user),
+          "WhatsApp": user.whatsappNumber || "",
+          "Kota": user.city || "",
+          "Provinsi": user.province || "",
+          "Sektor": user.sector || "",
+          "Skor": formatNumber(user.totalScore || user.score || user.result?.total),
+          "Tier": user.tier || "",
+          "Status": user.status || "",
+          "Tanggal Input": formatUserInputDate(user)
+        };
+
+        questionHeaders.forEach(item => {
+          row[item.header] = answerMap.get(item.key) || "";
+        });
+
+        return row;
+      });
+
+      return {
+        headers,
+        rows
+      };
+    }
+
+    function exportUsersToExcel() {
+      if (typeof XLSX === "undefined") {
+        alert("Library Excel belum ter-load. Pastikan xlsx.full.min.js sudah dipasang.");
+        return;
+      }
+
+      const users = currentFilteredUsers.length
+        ? currentFilteredUsers
+        : getUsersForActiveFilter();
+
+      if (!users.length) {
+        alert("Tidak ada data user untuk diexport sesuai filter saat ini.");
+        return;
+      }
+
+      const exportData = buildExportData(users);
+
+      if (!exportData.rows.length) {
+        alert("Tidak ada data untuk diexport.");
+        return;
+      }
+
+      const hasQuestionColumn = exportData.headers.some(header => /^Q\d+/i.test(header));
+
+      if (!hasQuestionColumn) {
+        alert("Data jawaban Q1 sampai selesai belum ditemukan di response /api/admin/users. Cek apakah field answers/responses sudah dikirim dari backend.");
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData.rows, {
+        header: exportData.headers
+      });
+
+      worksheet["!cols"] = exportData.headers.map(header => ({
+        wch: Math.min(Math.max(String(header).length + 4, 18), 70)
+      }));
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Jawaban User");
+
+      const date = new Date().toISOString().slice(0, 10);
+
+      const filterName = [
+        userListState.keyword ? `keyword-${userListState.keyword}` : "",
+        userListState.fromDate ? `from-${userListState.fromDate}` : "",
+        userListState.toDate ? `to-${userListState.toDate}` : ""
+      ]
+        .filter(Boolean)
+        .join("-")
+        .replace(/[^\w-]/g, "_");
+
+      const fileName = filterName
+        ? `export-jawaban-user-${filterName}-${date}.xlsx`
+        : `export-jawaban-user-${date}.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
     }
 
     async function render() {
@@ -101,6 +449,7 @@
 
             <button class="btn primary search-user-btn" id="userSearchBtn" type="button">Search</button>
             <button class="btn secondary" id="userResetBtn" type="button">Reset</button>
+            <button class="btn secondary" id="userExportExcelBtn" type="button">Export Excel</button>
           </div>
         </section>
 
@@ -132,6 +481,7 @@
       const toDateInput = document.getElementById("userToDate");
       const searchBtn = document.getElementById("userSearchBtn");
       const resetBtn = document.getElementById("userResetBtn");
+      const exportExcelBtn = document.getElementById("userExportExcelBtn");
 
       const doSearch = () => {
         userListState.keyword = String(searchInput?.value || "").trim();
@@ -174,6 +524,8 @@
 
         render();
       });
+
+      exportExcelBtn?.addEventListener("click", exportUsersToExcel);
     }
 
     function renderUserListOnly() {
@@ -183,7 +535,9 @@
 
       if (!list) return;
 
-      const users = cachedUsers || [];
+      const users = getUsersForActiveFilter();
+      currentFilteredUsers = users;
+
       const totalRows = users.length;
       const totalPages = Math.max(1, Math.ceil(totalRows / USER_PAGE_SIZE));
 
