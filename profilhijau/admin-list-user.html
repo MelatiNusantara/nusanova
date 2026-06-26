@@ -433,18 +433,57 @@
       return merged;
     }
 
+    function withTimeout(promise, timeoutMs, fallbackValue) {
+      return Promise.race([
+        promise,
+        new Promise(resolve => {
+          setTimeout(() => resolve(fallbackValue), timeoutMs);
+        })
+      ]);
+    }
+
     async function fetchUsersDashboardForExport(users, onProgress) {
       const result = [];
+      const batchSize = 5;
+      const timeoutMs = 20000;
+      let completed = 0;
 
-      for (let index = 0; index < users.length; index += 1) {
-        const user = users[index];
+      for (let start = 0; start < users.length; start += batchSize) {
+        const batch = users.slice(start, start + batchSize);
 
-        if (typeof onProgress === "function") {
-          onProgress(index + 1, users.length);
-        }
+        const batchResult = await Promise.all(
+          batch.map(async user => {
+            try {
+              const fallbackUser = mergeUserWithDashboardDetail(user, {
+                answers: {}
+              });
 
-        const detailUser = await fetchUserDashboardForExport(user);
-        result.push(detailUser);
+              const detailUser = await withTimeout(
+                fetchUserDashboardForExport(user),
+                timeoutMs,
+                fallbackUser
+              );
+
+              return detailUser;
+
+            } catch (error) {
+              console.error("Gagal ambil detail user:", user?.id, error);
+
+              return mergeUserWithDashboardDetail(user, {
+                answers: {}
+              });
+
+            } finally {
+              completed += 1;
+
+              if (typeof onProgress === "function") {
+                onProgress(completed, users.length);
+              }
+            }
+          })
+        );
+
+        result.push(...batchResult);
       }
 
       return result;
