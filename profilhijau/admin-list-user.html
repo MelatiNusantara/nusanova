@@ -173,9 +173,25 @@
         ?? "";
     }
 
+    function getExportQuestionNumber(questionNumber) {
+      const internalNumber = Number(questionNumber);
+
+      if (!Number.isInteger(internalNumber)) {
+        return null;
+      }
+
+      if (internalNumber < 3) {
+        return null;
+      }
+
+      return internalNumber - 2;
+    }
+
     function getQuestionLabelFromItem(item, fallbackKey, questionNumber) {
+      const exportQuestionNumber = getExportQuestionNumber(questionNumber);
+
       if (!item || typeof item !== "object") {
-        return `Q${questionNumber || ""}`;
+        return `Q${exportQuestionNumber || ""}`;
       }
 
       const questionText = item.question
@@ -187,10 +203,12 @@
         ?? "";
 
       if (questionText) {
-        return `Q${questionNumber} - ${questionText}`;
+        return `Q${exportQuestionNumber} - ${questionText}`;
       }
 
-      return fallbackKey ? `Q${questionNumber} - ${fallbackKey}` : `Q${questionNumber}`;
+      return fallbackKey
+        ? `Q${exportQuestionNumber} - ${fallbackKey}`
+        : `Q${exportQuestionNumber}`;
     }
 
     function extractQuestionAnswers(user) {
@@ -222,15 +240,32 @@
               ?? item?.number
               ?? item?.id;
 
-            const questionNumber = getQuestionNumber(rawKey) || getQuestionNumber(item?.question);
+            const questionNumber =
+              getQuestionNumber(rawKey)
+              || getQuestionNumber(item?.question);
 
-            if (!questionNumber) return;
+            if (!questionNumber) {
+              return;
+            }
+
+            const exportQuestionNumber =
+              getExportQuestionNumber(questionNumber);
+
+            if (exportQuestionNumber === null) {
+              return;
+            }
 
             result.push({
-              number: questionNumber,
+              number: exportQuestionNumber,
               key: `q${questionNumber}`,
-              header: getQuestionLabelFromItem(item, rawKey, questionNumber),
-              answer: formatExportValue(getAnswerFromItem(item))
+              header: getQuestionLabelFromItem(
+                item,
+                rawKey,
+                questionNumber
+              ),
+              answer: formatExportValue(
+                getAnswerFromItem(item)
+              )
             });
           });
 
@@ -241,18 +276,35 @@
           Object.entries(source).forEach(([key, value]) => {
             const questionNumber = getQuestionNumber(key);
 
-            if (!questionNumber) return;
+            if (!questionNumber) {
+              return;
+            }
 
-            let header = `Q${questionNumber}`;
+            const exportQuestionNumber =
+              getExportQuestionNumber(questionNumber);
+
+            if (exportQuestionNumber === null) {
+              return;
+            }
+            let header = `Q${exportQuestionNumber}`;
             let answer = value;
 
-            if (value && typeof value === "object" && !Array.isArray(value)) {
-              header = getQuestionLabelFromItem(value, key, questionNumber);
+            if (
+              value
+              && typeof value === "object"
+              && !Array.isArray(value)
+            ) {
+              header = getQuestionLabelFromItem(
+                value,
+                key,
+                questionNumber
+              );
+
               answer = getAnswerFromItem(value);
             }
 
             result.push({
-              number: questionNumber,
+              number: exportQuestionNumber,
               key: `q${questionNumber}`,
               header,
               answer: formatExportValue(answer)
@@ -264,12 +316,15 @@
       const unique = new Map();
 
       result.forEach(item => {
-        if (!unique.has(item.key) || !unique.get(item.key).answer) {
+        const existing = unique.get(item.key);
+
+        if (!existing || (!existing.answer && item.answer)) {
           unique.set(item.key, item);
         }
       });
 
-      return Array.from(unique.values()).sort((a, b) => a.number - b.number);
+      return Array.from(unique.values())
+        .sort((a, b) => a.number - b.number);
     }
 
     function buildExportData(users) {
