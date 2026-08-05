@@ -327,80 +327,149 @@
         .sort((a, b) => a.number - b.number);
     }
 
-    function buildExportData(users) {
-      const questionHeaderMap = new Map();
-      const userAnswerMaps = [];
+    const EXPORT_SECTION_ORDER = [
+  "data_awal",
+  "identitas_usaha",
+  "profil",
+  "komitmen",
+  "proses",
+  "keuangan",
+  "rantai",
+  "digital",
+  "sosial",
+  "asesor"
+];
 
-      users.forEach(user => {
-        const answers = extractQuestionAnswers(user);
-        const answerMap = new Map();
+function getExcelQuestionColumns() {
+  if (
+    typeof ADMIN_QUESTIONS === "undefined"
+    || !Array.isArray(ADMIN_QUESTIONS)
+  ) {
+    return [];
+  }
 
-        answers.forEach(item => {
-          if (!questionHeaderMap.has(item.key)) {
-            questionHeaderMap.set(item.key, {
-              number: item.number,
-              header: item.header
-            });
-          }
+  return ADMIN_QUESTIONS
+    /*
+     * Q1 dan Q2 merupakan data internal yang disembunyikan.
+     * Q64 merupakan komentar asesor/data lama.
+     */
+    .filter(question => {
+      return !["Q1", "Q2", "Q64"].includes(question.id);
+    })
+    .slice()
+    .sort((firstQuestion, secondQuestion) => {
+      const firstSectionIndex = EXPORT_SECTION_ORDER.indexOf(
+        firstQuestion.section
+      );
 
-          answerMap.set(item.key, item.answer);
-        });
+      const secondSectionIndex = EXPORT_SECTION_ORDER.indexOf(
+        secondQuestion.section
+      );
 
-        userAnswerMaps.push({
-          user,
-          answerMap
-        });
-      });
+      const safeFirstSectionIndex =
+        firstSectionIndex >= 0 ? firstSectionIndex : 999;
 
-      const questionHeaders = Array.from(questionHeaderMap.entries())
-        .sort((a, b) => a[1].number - b[1].number)
-        .map(([key, value]) => ({
-          key,
-          header: value.header
-        }));
+      const safeSecondSectionIndex =
+        secondSectionIndex >= 0 ? secondSectionIndex : 999;
 
-      const headers = [
-        "Nama User",
-        "Nama Usaha",
-        "Nama Asesor",
-        "WhatsApp",
-        "Kota",
-        "Provinsi",
-        "Sektor",
-        "Skor",
-        "Tier",
-        "Status",
-        "Tanggal Input",
-        ...questionHeaders.map(item => item.header)
-      ];
+      const sectionDifference =
+        safeFirstSectionIndex - safeSecondSectionIndex;
 
-      const rows = userAnswerMaps.map(({ user, answerMap }) => {
-        const row = {
-          "Nama User": getRespondentName(user),
-          "Nama Usaha": getBusinessName(user),
-          "Nama Asesor": getasesorName(user),
-          "WhatsApp": user.whatsappNumber || "",
-          "Kota": user.city || "",
-          "Provinsi": user.province || "",
-          "Sektor": user.sector || "",
-          "Skor": formatNumber(user.totalScore || user.score || user.result?.total),
-          "Tier": user.tier || "",
-          "Status": user.status || "",
-          "Tanggal Input": formatUserInputDate(user)
-        };
+      if (sectionDifference !== 0) {
+        return sectionDifference;
+      }
 
-        questionHeaders.forEach(item => {
-          row[item.header] = answerMap.get(item.key) || "";
-        });
-
-        return row;
-      });
+      return Number(firstQuestion.no || 0)
+        - Number(secondQuestion.no || 0);
+    })
+    .map((question, index) => {
+      const visibleQuestionNumber = index + 1;
 
       return {
-        headers,
-        rows
+        /*
+         * Key tetap memakai ID backend.
+         *
+         * Contoh:
+         * Dokumen legalitas tetap mengambil jawaban dari q9,
+         * tetapi header Excel-nya menjadi Q17.
+         */
+        key: String(question.id || "").toLowerCase(),
+
+        number: visibleQuestionNumber,
+
+        /*
+         * Header menggunakan nomor dan judul pertanyaan
+         * yang sama dengan tampilan questionnaire.
+         */
+        header: `Q${visibleQuestionNumber} - ${question.title}`
       };
-    }
+    });
+}
+
+function buildExportData(users) {
+  const questionHeaders = getExcelQuestionColumns();
+
+  const headers = [
+    "Nama User",
+    "Nama Usaha",
+    "Nama Asesor",
+    "WhatsApp",
+    "Kota",
+    "Provinsi",
+    "Sektor",
+    "Skor",
+    "Tier",
+    "Status",
+    "Tanggal Input",
+    ...questionHeaders.map(item => item.header)
+  ];
+
+  const rows = users.map(user => {
+    const answers = extractQuestionAnswers(user);
+    const answerMap = new Map();
+
+    answers.forEach(item => {
+      /*
+       * Jawaban tetap dicari memakai ID asli backend:
+       * q9, q19, q20, dan seterusnya.
+       */
+      answerMap.set(
+        String(item.key || "").toLowerCase(),
+        item.answer
+      );
+    });
+
+    const row = {
+      "Nama User": getRespondentName(user),
+      "Nama Usaha": getBusinessName(user),
+      "Nama Asesor": getasesorName(user),
+      "WhatsApp": user.whatsappNumber || "",
+      "Kota": user.city || "",
+      "Provinsi": user.province || "",
+      "Sektor": user.sector || "",
+      "Skor": formatNumber(
+        user.totalScore
+        || user.score
+        || user.result?.total
+      ),
+      "Tier": user.tier || "",
+      "Status": user.status || "",
+      "Tanggal Input": formatUserInputDate(user)
+    };
+
+    questionHeaders.forEach(question => {
+      row[question.header] =
+        answerMap.get(question.key) || "";
+    });
+
+    return row;
+  });
+
+  return {
+    headers,
+    rows
+  };
+}
 
     function mergeUserWithDashboardDetail(user, detail) {
       const safeUser = user || {};
