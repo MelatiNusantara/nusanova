@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="id">
+<head>
+<script src="assets/demo-config.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List User - Admin Profil UMKM Hijau Berdampak</title>
+  <link rel="stylesheet" href="assets/admin-style.css">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="assets/admin-common.js"></script>
+  <script>
+    const USER_PAGE_SIZE = 10;
+
+    let cachedUsers = [];
+    let currentFilteredUsers = [];
+    let exportDetailCache = new Map();
+
+    let userListState = {
+      keyword: "",
+      fromDate: "",
+      toDate: "",
+      page: 1
+    };
+
+    function buildUserListQuery() {
+      const params = new URLSearchParams();
+
+      if (userListState.keyword) {
+        params.set("keyword", userListState.keyword);
+      }
+
+      if (userListState.fromDate) {
+        params.set("fromDate", userListState.fromDate);
+      }
+
+      if (userListState.toDate) {
+        params.set("toDate", userListState.toDate);
+      }
+
+      const query = params.toString();
+      return query ? `?${query}` : "";
+    }
+
+    function getUserInputDate(user) {
+      return user?.inputDate || user?.createdAt || user?.submittedAt || user?.updatedAt || user?.assessmentDate || null;
+    }
+
+    function formatUserInputDate(user) {
+      const value = getUserInputDate(user);
+      if (!value) return "-";
+
+      return formatDateTime(value);
+    }
+
+    if (requireAdmin()) {
+      render();
+    }
+
+    function toDateOnly(value) {
+      if (!value) return "";
+
+      const text = String(value).trim();
+
+      const directDate = text.match(/^\d{4}-\d{2}-\d{2}/);
+      if (directDate) {
+        return directDate[0];
+      }
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function isUserMatchDateFilter(user) {
+      const userDate = toDateOnly(getUserInputDate(user));
+
+      if (!userListState.fromDate && !userListState.toDate) {
+        return true;
+      }
+
+      if (!userDate) {
+        return false;
+      }
+
+      if (userListState.fromDate && userDate < userListState.fromDate) {
+        return false;
+      }
+
+      if (userListState.toDate && userDate > userListState.toDate) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function getUsersForActiveFilter() {
+      const users = cachedUsers || [];
+
+      const keyword = normalizeText(userListState.keyword);
+
+      return users.filter(user => {
+        const keywordMatch = !keyword || normalizeText([
+          user.id,
+          getBusinessName(user),
+          getRespondentName(user),
+          getasesorName(user),
+          user.whatsappNumber,
+          user.city,
+          user.province,
+          user.sector,
+          user.tier,
+          user.status
+        ].join(" ")).includes(keyword);
+
+        return keywordMatch && isUserMatchDateFilter(user);
+      });
+    }
+
+    function getQuestionNumber(value) {
+      const text = String(value || "").trim();
+
+      const match = text.match(/(?:^|[^a-zA-Z])q\s*[-_.]?\s*(\d+)(?:[^0-9]|$)/i)
+        || text.match(/question\s*[-_.]?\s*(\d+)/i)
+        || text.match(/answer\s*[-_.]?\s*(\d+)/i);
+
+      return match ? Number(match[1]) : null;
+    }
+
+    function formatExportValue(value) {
+      if (value === null || value === undefined) return "";
+
+      if (Array.isArray(value)) {
+        return value.map(formatExportValue).filter(Boolean).join("; ");
+      }
+
+      if (typeof value === "object") {
+        return formatExportValue(
+          value.answer
+          ?? value.value
+          ?? value.label
+          ?? value.text
+          ?? value.name
+          ?? JSON.stringify(value)
+        );
+      }
+
+      return String(value);
+    }
+
+    function getAnswerFromItem(item) {
+      if (!item || typeof item !== "object") return "";
+
+      return item.answer
+        ?? item.answerValue
+        ?? item.value
+        ?? item.response
+        ?? item.responseText
+        ?? item.selectedAnswer
+        ?? item.selectedValue
+        ?? item.option
+        ?? item.text
+        ?? "";
+    }
+
+    function getExportQuestionNumber(questionNumber) {
+      const internalNumber = Number(questionNumber);
+
+      if (!Number.isInteger(internalNumber)) {
+        return null;
+      }
+
+      if (internalNumber < 3) {
+        return null;
+      }
+
+      return internalNumber - 2;
+    }
+
+    function getQuestionLabelFromItem(item, fallbackKey, questionNumber) {
+      const exportQuestionNumber = getExportQuestionNumber(questionNumber);
+
+      if (!item || typeof item !== "object") {
+        return `Q${exportQuestionNumber || ""}`;
+      }
+
+      const questionText = item.question
+        ?? item.questionText
+        ?? item.questionLabel
+        ?? item.label
+        ?? item.title
+        ?? item.name
+        ?? "";
+
+      if (questionText) {
+        return `Q${exportQuestionNumber} - ${questionText}`;
+      }
+
+      return fallbackKey
+        ? `Q${exportQuestionNumber} - ${fallbackKey}`
+        : `Q${exportQuestionNumber}`;
+    }
+
+    function extractQuestionAnswers(user) {
+      const result = [];
+
+      const possibleSources = [
+        user?.answers,
+        user?.responses,
+        user?.formAnswers,
+        user?.assessmentAnswers,
+        user?.questionAnswers,
+        user?.questionnaireAnswers,
+        user?.questions,
+        user?.questionnaire,
+        user?.result?.answers,
+        user?.result?.responses,
+        user
+      ].filter(Boolean);
+
+      possibleSources.forEach(source => {
+        if (Array.isArray(source)) {
+          source.forEach(item => {
+            const rawKey = item?.key
+              ?? item?.code
+              ?? item?.questionCode
+              ?? item?.questionKey
+              ?? item?.questionNo
+              ?? item?.questionNumber
+              ?? item?.number
+              ?? item?.id;
+
+            const questionNumber =
+              getQuestionNumber(rawKey)
+              || getQuestionNumber(item?.question);
+
+            if (!questionNumber) {
+              return;
+            }
+
+            const exportQuestionNumber =
+              getExportQuestionNumber(questionNumber);
+
+            if (exportQuestionNumber === null) {
+              return;
+            }
+
+            result.push({
+              number: exportQuestionNumber,
+              key: `q${questionNumber}`,
+              header: getQuestionLabelFromItem(
+                item,
+                rawKey,
+                questionNumber
+              ),
+              answer: formatExportValue(
+                getAnswerFromItem(item)
+              )
+            });
+          });
+
+          return;
+        }
+
+        if (typeof source === "object") {
+          Object.entries(source).forEach(([key, value]) => {
+            const questionNumber = getQuestionNumber(key);
+
+            if (!questionNumber) {
+              return;
+            }
+
+            const exportQuestionNumber =
+              getExportQuestionNumber(questionNumber);
+
+            if (exportQuestionNumber === null) {
+              return;
+            }
+            let header = `Q${exportQuestionNumber}`;
+            let answer = value;
+
+            if (
+              value
+              && typeof value === "object"
+              && !Array.isArray(value)
+            ) {
+              header = getQuestionLabelFromItem(
+                value,
+                key,
+                questionNumber
+              );
+
+              answer = getAnswerFromItem(value);
+            }
+
+            result.push({
+              number: exportQuestionNumber,
+              key: `q${questionNumber}`,
+              header,
+              answer: formatExportValue(answer)
+            });
+          });
+        }
+      });
+
+      const unique = new Map();
+
+      result.forEach(item => {
+        const existing = unique.get(item.key);
+
+        if (!existing || (!existing.answer && item.answer)) {
+          unique.set(item.key, item);
+        }
+      });
+
+      return Array.from(unique.values())
+        .sort((a, b) => a.number - b.number);
+    }
+
+    const EXPORT_SECTION_ORDER = [
+  "data_awal",
+  "identitas_usaha",
+  "profil",
+  "komitmen",
+  "proses",
+  "keuangan",
+  "rantai",
+  "digital",
+  "sosial",
+  "asesor"
+];
+
+function getExcelQuestionColumns() {
+  if (
+    typeof ADMIN_QUESTIONS === "undefined"
+    || !Array.isArray(ADMIN_QUESTIONS)
+  ) {
+    return [];
+  }
+
+  return ADMIN_QUESTIONS
+    /*
+     * Q1 dan Q2 merupakan data internal yang disembunyikan.
+     * Q64 merupakan komentar asesor/data lama.
+     */
+    .filter(question => {
+      return !["Q1", "Q2", "Q64"].includes(question.id);
+    })
+    .slice()
+    .sort((firstQuestion, secondQuestion) => {
+      const firstSectionIndex = EXPORT_SECTION_ORDER.indexOf(
+        firstQuestion.section
+      );
+
+      const secondSectionIndex = EXPORT_SECTION_ORDER.indexOf(
+        secondQuestion.section
+      );
+
+      const safeFirstSectionIndex =
+        firstSectionIndex >= 0 ? firstSectionIndex : 999;
+
+      const safeSecondSectionIndex =
+        secondSectionIndex >= 0 ? secondSectionIndex : 999;
+
+      const sectionDifference =
+        safeFirstSectionIndex - safeSecondSectionIndex;
+
+      if (sectionDifference !== 0) {
+        return sectionDifference;
+      }
+
+      return Number(firstQuestion.no || 0)
+        - Number(secondQuestion.no || 0);
+    })
+    .map((question, index) => {
+      const visibleQuestionNumber = index + 1;
+
+      return {
+        /*
+         * Key tetap memakai ID backend.
+         *
+         * Contoh:
+         * Dokumen legalitas tetap mengambil jawaban dari q9,
+         * tetapi header Excel-nya menjadi Q17.
+         */
+        key: String(question.id || "").toLowerCase(),
+
+        number: visibleQuestionNumber,
+
+        /*
+         * Header menggunakan nomor dan judul pertanyaan
+         * yang sama dengan tampilan questionnaire.
+         */
+        header: `Q${visibleQuestionNumber} - ${question.title}`
+      };
+    });
+}
+
+function buildExportData(users) {
+  const questionHeaders = getExcelQuestionColumns();
+
+  const headers = [
+    "Nama User",
+    "Nama Usaha",
+    "Nama Asesor",
+    "WhatsApp",
+    "Kota",
+    "Provinsi",
+    "Sektor",
+    "Skor",
+    "Tier",
+    "Status",
+    "Tanggal Input",
+    ...questionHeaders.map(item => item.header)
+  ];
+
+  const rows = users.map(user => {
+    const answers = extractQuestionAnswers(user);
+    const answerMap = new Map();
+
+    answers.forEach(item => {
+      /*
+       * Jawaban tetap dicari memakai ID asli backend:
+       * q9, q19, q20, dan seterusnya.
+       */
+      answerMap.set(
+        String(item.key || "").toLowerCase(),
+        item.answer
+      );
+    });
+
+    const row = {
+      "Nama User": getRespondentName(user),
+      "Nama Usaha": getBusinessName(user),
+      "Nama Asesor": getasesorName(user),
+      "WhatsApp": user.whatsappNumber || "",
+      "Kota": user.city || "",
+      "Provinsi": user.province || "",
+      "Sektor": user.sector || "",
+      "Skor": formatNumber(
+        user.totalScore
+        || user.score
+        || user.result?.total
+      ),
+      "Tier": user.tier || "",
+      "Status": user.status || "",
+      "Tanggal Input": formatUserInputDate(user)
+    };
+
+    questionHeaders.forEach(question => {
+      row[question.header] =
+        answerMap.get(question.key) || "";
+    });
+
+    return row;
+  });
+
+  return {
+    headers,
+    rows
+  };
+}
+
+    function mergeUserWithDashboardDetail(user, detail) {
+      const safeUser = user || {};
+      const safeDetail = detail || {};
+
+      return {
+        ...safeUser,
+        ...safeDetail,
+
+        id: safeUser.id ?? safeDetail.id,
+
+        businessName: safeDetail.businessName
+          || safeDetail.business
+          || safeUser.businessName
+          || safeUser.business,
+
+        respondentName: safeDetail.respondentName
+          || safeDetail.name
+          || safeUser.respondentName
+          || safeUser.name,
+
+        assessorName: safeDetail.assessorName
+          || safeDetail.asesorName
+          || safeDetail.asesor
+          || safeUser.assessorName
+          || safeUser.asesorName
+          || safeUser.asesor,
+
+        whatsappNumber: safeDetail.whatsappNumber
+          || safeDetail.whatsapp
+          || safeUser.whatsappNumber
+          || safeUser.whatsapp,
+
+        city: safeDetail.city || safeUser.city,
+        province: safeDetail.province || safeUser.province,
+        sector: safeDetail.sector || safeUser.sector,
+        tier: safeDetail.tier || safeDetail.tierLabel || safeUser.tier || safeUser.tierLabel,
+        status: safeDetail.status || safeUser.status,
+
+        totalScore: safeDetail.totalScore
+          ?? safeDetail.score
+          ?? safeDetail.scores?.total
+          ?? safeUser.totalScore
+          ?? safeUser.score
+          ?? safeUser.result?.total,
+
+        inputDate: safeUser.inputDate
+          || safeUser.createdAt
+          || safeUser.submittedAt
+          || safeUser.updatedAt
+          || safeDetail.submittedAt
+          || safeDetail.createdAt
+          || safeDetail.updatedAt,
+
+        answers: safeDetail.answers
+          || safeDetail.responses
+          || safeDetail.formAnswers
+          || safeDetail.assessmentAnswers
+          || safeUser.answers
+          || {}
+      };
+    }
+
+    async function fetchUserDashboardForExport(user) {
+      const userId = user?.id;
+
+      if (!userId) {
+        return user;
+      }
+
+      const cacheKey = String(userId);
+
+      if (exportDetailCache.has(cacheKey)) {
+        return exportDetailCache.get(cacheKey);
+      }
+
+      const detail = await adminFetch(
+        "/api/admin/users/" + encodeURIComponent(userId) + "/dashboard"
+      );
+
+      const merged = mergeUserWithDashboardDetail(user, detail);
+
+      exportDetailCache.set(cacheKey, merged);
+
+      return merged;
+    }
+
+    function withTimeout(promise, timeoutMs, fallbackValue) {
+      return Promise.race([
+        promise,
+        new Promise(resolve => {
+          setTimeout(() => resolve(fallbackValue), timeoutMs);
+        })
+      ]);
+    }
+
+    async function fetchUsersDashboardForExport(users, onProgress) {
+      const result = [];
+      const batchSize = 5;
+      const timeoutMs = 20000;
+      let completed = 0;
+
+      for (let start = 0; start < users.length; start += batchSize) {
+        const batch = users.slice(start, start + batchSize);
+
+        const batchResult = await Promise.all(
+          batch.map(async user => {
+            try {
+              const fallbackUser = mergeUserWithDashboardDetail(user, {
+                answers: {}
+              });
+
+              const detailUser = await withTimeout(
+                fetchUserDashboardForExport(user),
+                timeoutMs,
+                fallbackUser
+              );
+
+              return detailUser;
+
+            } catch (error) {
+              console.error("Gagal ambil detail user:", user?.id, error);
+
+              return mergeUserWithDashboardDetail(user, {
+                answers: {}
+              });
+
+            } finally {
+              completed += 1;
+
+              if (typeof onProgress === "function") {
+                onProgress(completed, users.length);
+              }
+            }
+          })
+        );
+
+        result.push(...batchResult);
+      }
+
+      return result;
+    }
+
+    async function exportUsersToExcel() {
+      if (typeof XLSX === "undefined") {
+        alert("Library Excel belum ter-load. Pastikan xlsx.full.min.js sudah dipasang.");
+        return;
+      }
+
+      const users = currentFilteredUsers.length
+        ? currentFilteredUsers
+        : getUsersForActiveFilter();
+
+      if (!users.length) {
+        alert("Tidak ada data user untuk diexport sesuai filter saat ini.");
+        return;
+      }
+
+      const button = document.getElementById("userExportExcelBtn");
+      const oldButtonText = button?.textContent || "Export Excel";
+
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = `Mengambil detail 0/${users.length}...`;
+        }
+
+        const usersWithAnswers = await fetchUsersDashboardForExport(users, (current, total) => {
+          if (button) {
+            button.textContent = `Mengambil detail ${current}/${total}...`;
+          }
+        });
+
+        if (button) {
+          button.textContent = "Membuat Excel...";
+        }
+
+        const exportData = buildExportData(usersWithAnswers);
+
+        if (!exportData.rows.length) {
+          alert("Tidak ada data untuk diexport.");
+          return;
+        }
+
+        const hasQuestionColumn = exportData.headers.some(header => /^Q\d+/i.test(header));
+
+        if (!hasQuestionColumn) {
+          alert("Data jawaban Q1 sampai selesai belum ditemukan dari API detail user.");
+          return;
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData.rows, {
+          header: exportData.headers
+        });
+
+        worksheet["!cols"] = exportData.headers.map(header => ({
+          wch: Math.min(Math.max(String(header).length + 4, 18), 70)
+        }));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Jawaban User");
+
+        const date = new Date().toISOString().slice(0, 10);
+
+        const filterName = [
+          userListState.keyword ? `keyword-${userListState.keyword}` : "",
+          userListState.fromDate ? `from-${userListState.fromDate}` : "",
+          userListState.toDate ? `to-${userListState.toDate}` : ""
+        ]
+          .filter(Boolean)
+          .join("-")
+          .replace(/[^\w-]/g, "_");
+
+        const fileName = filterName
+          ? `export-jawaban-user-${filterName}-${date}.xlsx`
+          : `export-jawaban-user-${date}.xlsx`;
+
+        XLSX.writeFile(workbook, fileName);
+
+      } catch (error) {
+        console.error(error);
+        alert(`Gagal export Excel: ${error.message}`);
+
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = oldButtonText;
+        }
+      }
+    }
+
+    async function render() {
+      const root = document.getElementById("root");
+
+      root.innerHTML = adminShell("Daftar Profil UMKM Hijau Berdampak", "users", `
+        <section class="hero card users-hero">
+          <div class="hero-main">
+            <div class="eyebrow">Menu Admin • Data Respon UMKM Hijau</div>
+            <h1>Daftar Profil UMKM Hijau Berdampak</h1>
+            <p>
+              Daftar hasil penilaian dan pengukuran Profil UMKM Hijau 
+              berdasarkan landasan Tier HIJAU dan akses pendampingan dalam transformasi dan bisnis lestari.
+            </p>
+          </div>
+        </section>
+
+        <section class="user-toolbar card">
+          <div>
+            <h2>Data UMKM Hijau</h2>
+            <p id="userShownCount">Memuat data user...</p>
+          </div>
+
+          <div class="user-search-box user-filter-box">
+            <input
+              id="userSearchInput"
+              type="search"
+              value="${escapeHtml(userListState.keyword)}"
+              placeholder="Tulis nama, usaha, kota, sektor, asesor..."
+            >
+
+            <input
+              id="userFromDate"
+              type="date"
+              value="${escapeHtml(userListState.fromDate)}"
+              aria-label="Tanggal mulai"
+            >
+
+            <input
+              id="userToDate"
+              type="date"
+              value="${escapeHtml(userListState.toDate)}"
+              aria-label="Tanggal akhir"
+            >
+
+            <button class="btn primary search-user-btn" id="userSearchBtn" type="button">Search</button>
+            <button class="btn secondary" id="userResetBtn" type="button">Reset</button>
+            <button class="btn secondary" id="userExportExcelBtn" type="button">Export Excel</button>
+          </div>
+        </section>
+
+        <section class="user-list" id="userList">
+          <div class="empty">Memuat data...</div>
+        </section>
+
+        <div id="userPaginationMount"></div>
+      `);
+
+      bindUserListEvents();
+
+      try {
+        const users = await adminFetch(`/api/admin/users${buildUserListQuery()}`);
+        cachedUsers = Array.isArray(users) ? users : [];
+        renderUserListOnly();
+      } catch (error) {
+        console.error(error);
+        const list = document.getElementById("userList");
+        if (list) {
+          list.innerHTML = `<div class="empty">Gagal memuat data user dari backend.</div>`;
+        }
+      }
+    }
+
+    function bindUserListEvents() {
+      const searchInput = document.getElementById("userSearchInput");
+      const fromDateInput = document.getElementById("userFromDate");
+      const toDateInput = document.getElementById("userToDate");
+      const searchBtn = document.getElementById("userSearchBtn");
+      const resetBtn = document.getElementById("userResetBtn");
+      const exportExcelBtn = document.getElementById("userExportExcelBtn");
+
+      const doSearch = () => {
+        userListState.keyword = String(searchInput?.value || "").trim();
+        userListState.fromDate = fromDateInput?.value || "";
+        userListState.toDate = toDateInput?.value || "";
+        userListState.page = 1;
+        render();
+      };
+
+      searchBtn?.addEventListener("click", doSearch);
+
+      searchInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      fromDateInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      toDateInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          doSearch();
+        }
+      });
+
+      resetBtn?.addEventListener("click", () => {
+        userListState = {
+          keyword: "",
+          fromDate: "",
+          toDate: "",
+          page: 1
+        };
+
+        render();
+      });
+
+      exportExcelBtn?.addEventListener("click", exportUsersToExcel);
+    }
+
+    function renderUserListOnly() {
+      const list = document.getElementById("userList");
+      const counter = document.getElementById("userShownCount");
+      const paginationMount = document.getElementById("userPaginationMount");
+
+      if (!list) return;
+
+      const users = getUsersForActiveFilter();
+      currentFilteredUsers = users;
+
+      const totalRows = users.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / USER_PAGE_SIZE));
+
+      userListState.page = Math.min(Math.max(1, userListState.page || 1), totalPages);
+
+      const startIndex = (userListState.page - 1) * USER_PAGE_SIZE;
+      const pageRows = users.slice(startIndex, startIndex + USER_PAGE_SIZE);
+      const endIndex = startIndex + pageRows.length;
+
+      if (counter) {
+        counter.textContent = totalRows
+          ? `${totalRows} data cocok. Menampilkan ${startIndex + 1}-${endIndex}.`
+          : "Tidak ada data cocok.";
+      }
+
+      if (!pageRows.length) {
+        list.innerHTML = `<div class="empty">Tidak ada data user untuk filter ini.</div>`;
+      } else {
+        list.innerHTML = pageRows.map(user => renderUserCard(user)).join("");
+      }
+
+      if (paginationMount) {
+        paginationMount.innerHTML = renderUserPagination(totalRows, totalPages, startIndex, endIndex);
+      }
+
+      document.querySelectorAll("[data-user-detail]").forEach(button => {
+        button.addEventListener("click", () => {
+          const userId = button.dataset.userDetail;
+          renderUserDashboard(userId);
+        });
+      });
+
+      bindUserPagination();
+    }
+
+    function renderUserPagination(totalRows, totalPages, startIndex, endIndex) {
+      if (!totalRows || totalPages <= 1) {
+        return "";
+      }
+
+      return `
+        <div class="admin-pagination user-pagination card">
+          <button
+            class="btn secondary"
+            type="button"
+            data-user-page="${userListState.page - 1}"
+            ${userListState.page <= 1 ? "disabled" : ""}
+          >
+            ← Sebelumnya
+          </button>
+
+          <span>
+            Data ${startIndex + 1}-${endIndex} dari ${totalRows}
+            • Halaman ${userListState.page} / ${totalPages}
+          </span>
+
+          <button
+            class="btn secondary"
+            type="button"
+            data-user-page="${userListState.page + 1}"
+            ${userListState.page >= totalPages ? "disabled" : ""}
+          >
+            Berikutnya →
+          </button>
+        </div>
+      `;
+    }
+
+    function bindUserPagination() {
+      document.querySelectorAll("[data-user-page]").forEach(button => {
+        button.addEventListener("click", () => {
+          const nextPage = Number(button.dataset.userPage);
+
+          if (!Number.isFinite(nextPage) || nextPage < 1) return;
+
+          userListState.page = nextPage;
+          renderUserListOnly();
+
+          const toolbar = document.querySelector(".user-toolbar");
+          if (toolbar) {
+            toolbar.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      });
+    }
+
+    function filterUsers(users, keyword) {
+      const query = normalizeText(keyword);
+      if (!query) return users;
+
+      return users.filter(user => {
+        const haystack = normalizeText([
+          user.id,
+          getBusinessName(user),
+          getRespondentName(user),
+          getasesorName(user),
+          user.whatsappNumber,
+          user.city,
+          user.province,
+          user.sector,
+          user.tier,
+          user.status
+        ].join(" "));
+        return haystack.includes(query);
+      });
+    }
+
+    function renderUsers(users, keyword) {
+      const filtered = filterUsers(users || [], keyword);
+      const stats = summarizeUsers(users || []);
+      const filteredStats = summarizeUsers(filtered);
+
+      return `
+        <section class="user-toolbar card">
+          <div>
+            <h2>Data UMKM Hijau</h2>
+            <p>${filtered.length} data cocok. Rata-rata skor hasil filter: ${formatNumber(filteredStats.averageScore)}.</p>
+          </div>
+          <div class="user-search-box">
+            <input id="keywordInput" type="search" value="${escapeHtml(keyword)}" placeholder="Tulis nama, usaha, kota, sektor, asesor...">
+            <button class="btn primary" id="searchBtn" type="button">Search</button>
+          </div>
+        </section>
+
+        ${filtered.length ? `
+          <section class="user-list" id="userList">
+            ${filtered.map(user => renderUserCard(user)).join("")}
+          </section>
+        ` : `<section class="card empty">Belum ada data yang cocok dengan pencarian.</section>`}
+
+        <section class="admin-chart-grid">
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Distribusi Tier</h2><p>Ringkasan tier dari data user yang sedang ditampilkan.</p></div>
+              <select id="listTierChartType" class="chart-select">
+                <option value="bar">Bar</option>
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="listTierChart" class="admin-chart" height="260"></canvas>
+          </article>
+
+          <article class="admin-panel card">
+            <div class="admin-panel-head">
+              <div><h2>Top Sektor Usaha</h2><p>Sektor usaha terbanyak dari data user.</p></div>
+              <select id="listSectorChartType" class="chart-select">
+                <option value="horizontalBar" selected>Horizontal Bar</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+              </select>
+            </div>
+            <canvas id="listSectorChart" class="admin-chart" height="260"></canvas>
+          </article>
+        </section>
+
+        <section class="admin-panel card">
+          <div class="admin-panel-head">
+            <div><h2>Tabel Detail User</h2><p>Versi tabel untuk admin yang perlu melihat data lebih padat.</p></div>
+          </div>
+          ${renderTable(filtered)}
+        </section>
+      `;
+    }
+
+    function bindSearch(keyword) {
+      const input = document.getElementById("keywordInput");
+      const button = document.getElementById("searchBtn");
+      const doSearch = () => render(input ? input.value : keyword);
+
+      button?.addEventListener("click", doSearch);
+      input?.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          doSearch();
+        }
+      });
+    }
+
+    function bindListCharts(users, keyword) {
+      ["listTierChartType", "listSectorChartType"].forEach(id => {
+        document.getElementById(id)?.addEventListener("change", () => drawListCharts(users, keyword));
+      });
+    }
+
+    function drawListCharts(users, keyword) {
+      const filtered = filterUsers(users || [], keyword);
+      const tierData = countBy(filtered, user => user.tier || "Tidak diisi");
+      const sectorData = compactChartData(countBy(filtered, user => user.sector || "Tidak diisi"), 8);
+
+      drawSimpleChart("listTierChart", tierData, document.getElementById("listTierChartType")?.value || "horizontalBar", { maxItems: 8 });
+      drawSimpleChart("listSectorChart", sectorData, document.getElementById("listSectorChartType")?.value || "horizontalBar", { maxItems: 8 });
+    }
+
+    function renderUserCard(user) {
+      const businessName = getBusinessName(user);
+      const respondentName = getRespondentName(user);
+      const asesorName = getasesorName(user);
+      const location = getLocation(user);
+      const score = toNumber(user.totalScore || user.score || user.result?.total);
+      const percent = getScorePercent(score);
+      const statusClass = getStatusClass(user.status);
+      const initial = (businessName || respondentName || "U").trim().charAt(0).toUpperCase();
+
+      return `
+        <article class="user-card card">
+          <div class="user-card-main">
+            <div class="user-avatar">${escapeHtml(initial)}</div>
+            <div>
+              <h3>${escapeHtml(businessName)}</h3>
+              <p>${escapeHtml(respondentName)} • ${escapeHtml(location)}</p>
+              <div class="user-tags">
+                <span>${escapeHtml(user.businessScale || "-")}</span>
+                <span>${escapeHtml(user.sector || "-")}</span>
+                <span>Input: ${escapeHtml(formatUserInputDate(user))}</span>
+                <span>${escapeHtml(user.status || "-")}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-score-box">
+            <strong>${formatNumber(score)}</strong>
+            <span>/1000</span>
+            <small>${escapeHtml(user.tier || "-")}</small>
+            <div class="mini-bar"><i style="width:${percent}%"></i></div>
+          </div>
+
+          <a class="btn primary" href="admin-user-dashboard.html?id=${encodeURIComponent(user.id)}">Lihat Dashboard</a>
+        </article>
+      `;
+    }
+
+    function renderTable(users) {
+      if (!users.length) {
+        return `<div class="empty">Belum ada data SUBMITTED di database.</div>`;
+      }
+
+      return `
+        <div class="table-scroll tall-table">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usaha</th>
+                <th>Responden</th>
+                <th>Lokasi</th>
+                <th>Sektor</th>
+                <th>Skor</th>
+                <th>Tier</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map(user => `
+                <tr>
+                  <td>${escapeHtml(user.id)}</td>
+                  <td><strong>${escapeHtml(getBusinessName(user))}</strong><br><small>${escapeHtml(getasesorName(user))}</small></td>
+                  <td>${escapeHtml(getRespondentName(user))}<br><small>${escapeHtml(user.whatsappNumber || "-")}</small></td>
+                  <td>${escapeHtml(getLocation(user))}</td>
+                  <td>${escapeHtml(user.sector || "-")}</td>
+                  <td class="score">${formatNumber(user.totalScore || user.score || user.result?.total)}</td>
+                  <td><span class="badge">${escapeHtml(user.tier || "-")}</span></td>
+                  <td><span class="status-badge ${getStatusClass(user.status)}">${escapeHtml(user.status || "-")}</span></td>
+                  <td><a class="btn primary" href="admin-user-dashboard.html?id=${encodeURIComponent(user.id)}">Detail</a></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
