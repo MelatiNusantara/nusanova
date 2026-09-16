@@ -2709,27 +2709,67 @@
       recommendation
     ) => {
 
-      // EXISTING institution parameter tetap diterima
-      // supaya signature function tidak berubah.
-      // Khusus Demo, MITRA diganti oleh inkubator
-      // berdasarkan lokasi BPS user.
+      const mapping =
+        currentIncubatorRecommendation?.incubator ||
+        null;
+
+      const institutionLinks = [];
+
+      const plutName =
+        String(
+          mapping?.plutName || ""
+        ).trim();
 
       const incubatorName =
-        currentIncubatorRecommendation?.incubator?.incubatorName ||
-        "Mitra belum dipetakan";
+        String(
+          mapping?.incubatorName || ""
+        ).trim();
 
-      institution = incubatorName;
+      const incubatorEmail =
+        String(
+          mapping?.incubatorEmail || ""
+        ).trim();
+
+      if (plutName) {
+        institutionLinks.push({
+          name: plutName,
+          url: ""
+        });
+      }
+
+      if (
+        incubatorName &&
+        !institutionLinks.some(
+          item =>
+            item.name === incubatorName
+        )
+      ) {
+        institutionLinks.push({
+          name: incubatorName,
+          url: ""
+        });
+      }
+
+      institution =
+        institutionLinks.length
+          ? institutionLinks
+              .map(item => item.name)
+              .join(" / ")
+          : "Mitra belum dipetakan";
 
       items.push({
         code,
         type,
         institution,
-        institutionLinks: [
-          {
-            name: institution,
-            url: ""
-          }
-        ],
+        institutionLinks:
+          institutionLinks.length
+            ? institutionLinks
+            : [
+                {
+                  name: institution,
+                  url: ""
+                }
+              ],
         title,
         recommendation
       });
@@ -3147,6 +3187,114 @@
       };
     }
 
+    function printAssessmentResult() {
+      const dashboards =
+        document.querySelectorAll(".dashboard");
+
+      let printTarget = null;
+
+      dashboards.forEach(dashboard => {
+        const style =
+          window.getComputedStyle(dashboard);
+
+        const isVisible =
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          dashboard.offsetParent !== null;
+
+        if (
+          isVisible &&
+          !printTarget
+        ) {
+          printTarget = dashboard;
+        }
+      });
+
+      if (!printTarget) {
+        return;
+      }
+
+      document
+        .querySelectorAll(".print-target")
+        .forEach(el => {
+          el.classList.remove(
+            "print-target"
+          );
+        });
+
+      printTarget.classList.add(
+        "print-target"
+      );
+
+      printTarget
+        .querySelectorAll(".score-details")
+        .forEach(details => {
+          details.dataset.wasOpen =
+            details.open
+              ? "true"
+              : "false";
+
+          details.open = true;
+        });
+
+      document.body.classList.add(
+        "assessment-print-mode"
+      );
+
+      window.print();
+    }
+
+    function restoreAssessmentAfterPrint() {
+      document
+        .querySelectorAll(
+          ".print-target .score-details"
+        )
+        .forEach(details => {
+          details.open =
+            details.dataset.wasOpen ===
+            "true";
+
+          delete details.dataset.wasOpen;
+        });
+
+      document
+        .querySelectorAll(".print-target")
+        .forEach(el => {
+          el.classList.remove(
+            "print-target"
+          );
+        });
+
+      document.body.classList.remove(
+        "assessment-print-mode"
+      );
+    }
+
+    window.addEventListener(
+      "afterprint",
+      restoreAssessmentAfterPrint
+    );
+
+    function restoreAssessmentAfterPrint() {
+      document
+        .querySelectorAll(".score-details")
+        .forEach(details => {
+          details.open =
+            details.dataset.wasOpen === "true";
+
+          delete details.dataset.wasOpen;
+        });
+
+      document.body.classList.remove(
+        "assessment-print-mode"
+      );
+    }
+
+    window.addEventListener(
+      "afterprint",
+      restoreAssessmentAfterPrint
+    );
+
     function showDashboard() {
       const missing = activeQuestions().filter(q => !isAnswered(q));
 
@@ -3192,7 +3340,10 @@
       mount.innerHTML = renderDashboard(result);
       mount.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      $("#printBtn")?.addEventListener("click", () => window.print());
+      $("#printBtn")?.addEventListener(
+        "click",
+        printAssessmentResult
+      );
       $("#copyBtn")?.addEventListener("click", () => copySummary(result));
 
       saveAssessmentToBackend("submit", result)
@@ -4192,7 +4343,10 @@
       `;
 
       $("#backToUsersBtn", root)?.addEventListener("click", () => renderUsersPage());
-      $("#printBtn", root)?.addEventListener("click", () => window.print());
+      $("#printBtn", root)?.addEventListener(
+        "click",
+        printAssessmentResult
+      );
       $("#copyBtn", root)?.addEventListener("click", () => {
         withTemporaryAnswers(user.answers, () => copySummary(rendered.result));
       });
@@ -6959,29 +7113,185 @@
     }
 
     @media print {
-      .site-header,
-      .progress-card,
-      .section-card,
-      .questions-wrap,
-      .nav-actions,
-      .dash-actions,
-      .official-footer,
-      .toast {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /*
+      * SEMUA elemen disembunyikan dari area print.
+      */
+      body * {
+        visibility: hidden !important;
+      }
+
+      /*
+      * Hanya dashboard hasil assessment
+      * yang boleh dicetak.
+      */
+      .print-target,
+      .print-target * {
+        visibility: visible !important;
+      }
+
+      /*
+      * Dashboard dipindahkan ke titik paling atas
+      * sehingga langsung menjadi halaman 1.
+      */
+      .print-target {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 18px !important;
+
+        border: 1px solid #dce7e2 !important;
+        border-radius: 16px !important;
+
+        background: #ffffff !important;
+
+        overflow: visible !important;
+
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /*
+      * Tombol tidak ikut PDF.
+      */
+      .print-target .dash-actions,
+      .print-target button,
+      .print-target .no-print {
         display: none !important;
       }
 
-      body {
-        background: white;
+      /*
+      * Header hasil assessment.
+      */
+      .print-target .dash-head {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
       }
 
-      .app-shell {
-        max-width: none;
-        padding: 0;
+      /*
+      * Nilai + Tier + Profil langsung di halaman 1.
+      */
+      .print-target .result-grid {
+        display: grid !important;
+        grid-template-columns:
+          150px 1fr 1fr !important;
+        gap: 10px !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
 
-      .dashboard {
-        box-shadow: none;
-        border: 0;
+      .print-target .score-meter {
+        min-height: 150px !important;
+      }
+
+      /*
+      * Rincian skor.
+      */
+      .print-target .section-title-line {
+        margin-top: 18px !important;
+
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+      }
+
+      /*
+      * Tabel PDF.
+      */
+      .print-target .table-wrap {
+        overflow: visible !important;
+        width: 100% !important;
+      }
+
+      .print-target table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: auto !important;
+        font-size: 10px !important;
+      }
+
+      .print-target th,
+      .print-target td {
+        padding: 6px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+      }
+
+      .print-target thead {
+        display: table-header-group !important;
+      }
+
+      .print-target tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /*
+      * ESG.
+      */
+      .print-target .esg-grid {
+        display: grid !important;
+        grid-template-columns:
+          repeat(3, 1fr) !important;
+        gap: 8px !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /*
+      * Rekomendasi.
+      */
+      .print-target .recommendation-grid {
+        display: grid !important;
+        grid-template-columns:
+          1fr 1fr !important;
+        gap: 8px !important;
+      }
+
+      /*
+      * Rincian pertanyaan dibuka semuanya.
+      */
+      .print-target .score-details {
+        display: block !important;
+      }
+
+      .print-target .score-details > summary {
+        display: none !important;
+      }
+
+      /*
+      * Jangan pecah card kalau masih muat.
+      */
+      .print-target .tier-card,
+      .print-target .profile-card,
+      .print-target .esg-card,
+      .print-target .alert {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .print-target a {
+        color: #111827 !important;
+        text-decoration: none !important;
       }
     }
   
