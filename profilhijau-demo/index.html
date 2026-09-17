@@ -3532,7 +3532,7 @@
       }
 
       return `
-        <div class="table-wrap">
+        <div class="table-wrap assistance-watermark">
           <table>
             <thead>
               <tr>
@@ -5945,6 +5945,36 @@
       background: white;
     }
 
+    .assistance-watermark {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .assistance-watermark::after {
+      content: "Versi Demo";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(56px, 8vw, 120px);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(15, 23, 42, 0.14);
+      transform: rotate(-24deg);
+      pointer-events: none;
+      user-select: none;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .assistance-watermark table,
+    .assistance-watermark .empty {
+      position: relative;
+      z-index: 1;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -7216,10 +7246,12 @@
       /*
       * Tabel PDF.
       */
-      .print-target .table-wrap {
-        overflow: visible !important;
-        width: 100% !important;
-      }
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: white;
+      }      
 
       .print-target table {
         width: 100% !important;
