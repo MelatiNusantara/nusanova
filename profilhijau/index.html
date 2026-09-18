@@ -1556,14 +1556,12 @@
     }
 
     function getVisibleQuestionNo(question) {
-      const activeIndex = activeQuestions().findIndex(q => q.id === question.id);
+      const stableIndex = numberedQuestions()
+        .findIndex(q => q.id === question.id);
 
-      if (activeIndex >= 0) {
-        return activeIndex + 1;
-      }
-
-      const stableIndex = numberedQuestions().findIndex(q => q.id === question.id);
-      return stableIndex >= 0 ? stableIndex + 1 : (question?.no || "-");
+      return stableIndex >= 0
+        ? stableIndex + 1
+        : (question?.no || "-");
     }
 
     function applyEmployeeDependencyDefaults() {
@@ -2724,6 +2722,74 @@
       };
     }
 
+    function printAssessmentResult() {
+      const dashboards =
+        document.querySelectorAll(".dashboard");
+
+      let printTarget = null;
+
+      dashboards.forEach(dashboard => {
+        const style =
+          window.getComputedStyle(dashboard);
+
+        const isVisible =
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          dashboard.offsetParent !== null;
+
+        if (isVisible && !printTarget) {
+          printTarget = dashboard;
+        }
+      });
+
+      if (!printTarget) {
+        return;
+      }
+
+      document
+        .querySelectorAll(".print-target")
+        .forEach(el => {
+          el.classList.remove("print-target");
+        });
+
+      printTarget.classList.add("print-target");
+
+      printTarget
+        .querySelectorAll(".score-details")
+        .forEach(details => {
+          details.dataset.wasOpen =
+            details.open ? "true" : "false";
+
+          details.open = true;
+        });
+
+      window.print();
+    }
+
+    function restoreAssessmentAfterPrint() {
+      document
+        .querySelectorAll(
+          ".print-target .score-details"
+        )
+        .forEach(details => {
+          details.open =
+            details.dataset.wasOpen === "true";
+
+          delete details.dataset.wasOpen;
+        });
+
+      document
+        .querySelectorAll(".print-target")
+        .forEach(el => {
+          el.classList.remove("print-target");
+        });
+    }
+
+    window.addEventListener(
+      "afterprint",
+      restoreAssessmentAfterPrint
+    );
+
     function showDashboard() {
       const missing = activeQuestions().filter(q => !isAnswered(q));
 
@@ -2769,7 +2835,10 @@
       mount.innerHTML = renderDashboard(result);
       mount.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      $("#printBtn")?.addEventListener("click", () => window.print());
+      $("#printBtn")?.addEventListener(
+        "click",
+        printAssessmentResult
+      );
       $("#copyBtn")?.addEventListener("click", () => copySummary(result));
 
       saveAssessmentToBackend("submit", result)
@@ -3769,7 +3838,10 @@
       `;
 
       $("#backToUsersBtn", root)?.addEventListener("click", () => renderUsersPage());
-      $("#printBtn", root)?.addEventListener("click", () => window.print());
+      $("#printBtn", root)?.addEventListener(
+        "click",
+        printAssessmentResult
+      );
       $("#copyBtn", root)?.addEventListener("click", () => {
         withTemporaryAnswers(user.answers, () => copySummary(rendered.result));
       });
