@@ -1239,6 +1239,22 @@ function normalizeScoreSectionsForIndexLook(scores) {
   return [];
 }
 
+function getAdminVisibleQuestionNo(qid) {
+  const questions = adminMainQuestions();
+
+  const index = questions.findIndex(
+    question => question.id === qid
+  );
+
+  if (index >= 0) {
+    return index + 1;
+  }
+
+  const question = adminQuestionById(qid);
+
+  return question?.no || qid;
+}
+
 function getQuestionScoreRowsFromScores(scores) {
   const qScores = scores?.qScores || scores?.questionScores || {};
 
@@ -1246,7 +1262,7 @@ function getQuestionScoreRowsFromScores(scores) {
     const q = adminQuestionById(qid);
     return {
       qid,
-      no: q ? q.no : Number(qid.replace("Q", "")),
+      no: getAdminVisibleQuestionNo(qid),
       title: q ? q.title : qid,
       score: toNumber(qScores[qid]),
       max: toNumber(max, 1)
