@@ -2737,7 +2737,10 @@
           style.visibility !== "hidden" &&
           dashboard.offsetParent !== null;
 
-        if (isVisible && !printTarget) {
+        if (
+          isVisible &&
+          !printTarget
+        ) {
           printTarget = dashboard;
         }
       });
@@ -2749,19 +2752,29 @@
       document
         .querySelectorAll(".print-target")
         .forEach(el => {
-          el.classList.remove("print-target");
+          el.classList.remove(
+            "print-target"
+          );
         });
 
-      printTarget.classList.add("print-target");
+      printTarget.classList.add(
+        "print-target"
+      );
 
       printTarget
         .querySelectorAll(".score-details")
         .forEach(details => {
           details.dataset.wasOpen =
-            details.open ? "true" : "false";
+            details.open
+              ? "true"
+              : "false";
 
           details.open = true;
         });
+
+      document.body.classList.add(
+        "assessment-print-mode"
+      );
 
       window.print();
     }
@@ -2773,7 +2786,8 @@
         )
         .forEach(details => {
           details.open =
-            details.dataset.wasOpen === "true";
+            details.dataset.wasOpen ===
+            "true";
 
           delete details.dataset.wasOpen;
         });
@@ -2781,8 +2795,14 @@
       document
         .querySelectorAll(".print-target")
         .forEach(el => {
-          el.classList.remove("print-target");
+          el.classList.remove(
+            "print-target"
+          );
         });
+
+      document.body.classList.remove(
+        "assessment-print-mode"
+      );
     }
 
     window.addEventListener(
@@ -6587,29 +6607,190 @@
     }
 
     @media print {
-      .site-header,
-      .progress-card,
-      .section-card,
-      .questions-wrap,
-      .nav-actions,
-      .dash-actions,
-      .official-footer,
-      .toast {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /*
+      * Semua elemen disembunyikan.
+      */
+      body * {
+        visibility: hidden !important;
+      }
+
+      /*
+      * Hanya dashboard hasil assessment yang dicetak.
+      */
+      .print-target,
+      .print-target * {
+        visibility: visible !important;
+      }
+
+      /*
+      * Dashboard dimulai dari paling atas halaman PDF.
+      */
+      .print-target {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 18px !important;
+
+        border: 1px solid #dce7e2 !important;
+        border-radius: 16px !important;
+
+        background: #ffffff !important;
+
+        overflow: visible !important;
+
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /*
+      * KHUSUS PDF:
+      * dashboard header tidak dicetak.
+      *
+      * Jadi halaman PDF benar-benar dimulai
+      * dari Nilai + Tier + Profil Ringkas.
+      */
+      .print-target .dash-head {
         display: none !important;
       }
 
-      body {
-        background: white;
+      /*
+      * Tombol tidak ikut PDF.
+      */
+      .print-target .dash-actions,
+      .print-target button,
+      .print-target .no-print {
+        display: none !important;
       }
 
-      .app-shell {
-        max-width: none;
-        padding: 0;
+      /*
+      * Nilai + Tier + Profil di halaman pertama.
+      */
+      .print-target .result-grid {
+        display: grid !important;
+        grid-template-columns:
+          150px 1fr 1fr !important;
+        gap: 10px !important;
+
+        margin-top: 0 !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
 
-      .dashboard {
-        box-shadow: none;
-        border: 0;
+      .print-target .score-meter {
+        min-height: 150px !important;
+      }
+
+      /*
+      * Judul masing-masing bagian.
+      */
+      .print-target .section-title-line {
+        margin-top: 18px !important;
+
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+      }
+
+      /*
+      * Table PDF.
+      */
+      .print-target .table-wrap {
+        overflow: visible !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 18px !important;
+        background: white !important;
+      }
+
+      .print-target table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: auto !important;
+        font-size: 10px !important;
+      }
+
+      .print-target th,
+      .print-target td {
+        padding: 6px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+      }
+
+      .print-target thead {
+        display: table-header-group !important;
+      }
+
+      .print-target tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /*
+      * ESG.
+      */
+      .print-target .esg-grid {
+        display: grid !important;
+        grid-template-columns:
+          repeat(3, 1fr) !important;
+        gap: 8px !important;
+
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /*
+      * Recommendation.
+      */
+      .print-target .recommendation-grid {
+        display: grid !important;
+        grid-template-columns:
+          1fr 1fr !important;
+        gap: 8px !important;
+      }
+
+      /*
+      * Rincian pertanyaan otomatis dibuka.
+      */
+      .print-target .score-details {
+        display: block !important;
+      }
+
+      .print-target .score-details > summary {
+        display: none !important;
+      }
+
+      /*
+      * Card jangan terpotong antar halaman.
+      */
+      .print-target .tier-card,
+      .print-target .profile-card,
+      .print-target .esg-card,
+      .print-target .alert {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .print-target a {
+        color: #111827 !important;
+        text-decoration: none !important;
       }
     }
   
