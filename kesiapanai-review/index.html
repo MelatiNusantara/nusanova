@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Profil Kesiapan AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: follows the IOE AI Xcelerate course pages — navy header band with a serif title, white body, navy buttons, IOE red for the one main call to action. Colours sampled from learn.ioe-emp.org. */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --sunk:#f4f5f8; --line:#e2e0db; --fg:#1d203a; --muted:#677176;
+  --accent:#1d203a; --accent-ink:#ffffff; --accent-soft:#e6e7f0; --mark:#dd3027; --mark-soft:#fbe3e1;
+  --hero:#1d203a; --hero-ink:#ffffff; --hero-muted:#b5bac0; --hero-line:#3a3e5e; --cta:#dd3027; --cta-ink:#ffffff; --brand:#10115d;
+  --good:#2f7d3a; --warn:#a86a00; --crit:#b23a2e; --good-soft:#dcefdc; --warn-soft:#f6e7c8; --crit-soft:#f6dcd8;
+  --display:"Tinos", "Times New Roman", Times, serif;
+  --body:"Roboto", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono:"Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14162b; --surface:#1b1e36; --sunk:#101227; --line:#2e3150; --fg:#e8e9f2; --muted:#a4abb3;
+  --accent:#c3c7f0; --accent-ink:#1d203a; --accent-soft:#272b4d; --mark:#f06a61; --mark-soft:#3d1d22;
+  --hero:#0d0f22; --hero-ink:#ffffff; --hero-muted:#b5bac0; --hero-line:#2e3150; --cta:#dd3027; --cta-ink:#ffffff; --brand:#c3c7f0;
+  --good:#6cc27a; --warn:#e2a93f; --crit:#ef7c6e; --good-soft:#1c3320; --warn-soft:#3a2d12; --crit-soft:#3d1f1b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14162b; --surface:#1b1e36; --sunk:#101227; --line:#2e3150; --fg:#e8e9f2; --muted:#a4abb3;
+  --accent:#c3c7f0; --accent-ink:#1d203a; --accent-soft:#272b4d; --mark:#f06a61; --mark-soft:#3d1d22;
+  --hero:#0d0f22; --hero-ink:#ffffff; --hero-muted:#b5bac0; --hero-line:#2e3150; --cta:#dd3027; --cta-ink:#ffffff; --brand:#c3c7f0;
+  --good:#6cc27a; --warn:#e2a93f; --crit:#ef7c6e; --good-soft:#1c3320; --warn-soft:#3a2d12; --crit-soft:#3d1f1b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.8rem;font-weight:400;text-transform:uppercase;letter-spacing:.01em}
+h2{font-size:1.65rem;font-weight:400}
+h3{font-size:1.25rem;font-weight:400}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero);color:var(--hero-ink)}
+.top-in{max-width:1120px;margin:0 auto;padding:1rem 16px .6rem;display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center}
+.brand{display:flex;flex-direction:column;gap:.15rem;margin-right:auto;min-width:0}
+.brand small{color:var(--hero-muted);font-size:.85rem}
+.logos{flex:1 0 100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem 1.5rem;padding-bottom:.6rem;border-bottom:1px solid var(--hero-line);margin-bottom:.2rem}
+.logos-main,.logos-tech{display:flex;align-items:center;gap:.6rem 1.1rem;flex-wrap:wrap}
+.logo-nus{height:13px;width:auto}
+.logo-apindo{height:38px;width:auto}
+.logo-ecop{height:38px;width:auto}
+.logo-kat{height:22px;width:auto}
+.logo-partner{font-family:var(--body);font-weight:700;letter-spacing:.08em;font-size:.9rem;color:var(--hero-ink);border:1px solid var(--hero-line);border-radius:4px;padding:.1rem .45rem}
+.logo-label{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--hero-muted)}
+.ctrls{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.top .seg{border-color:var(--hero-line);background:transparent}
+.seg button{border:0;background:transparent;padding:.3rem .8rem;cursor:pointer;font-size:.9rem;color:var(--muted)}
+.top .seg button{color:var(--hero-muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:500}
+.top .seg button[aria-pressed="true"]{background:var(--hero-ink);color:#1d203a}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.tabs{max-width:1120px;margin:0 auto;padding:0 16px;display:flex;gap:.25rem;overflow-x:auto}
+.tabs button{border:0;background:none;padding:.55rem .8rem;border-bottom:3px solid transparent;cursor:pointer;color:var(--hero-muted);font-weight:500;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--hero-ink);border-bottom-color:var(--cta)}
+
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:1.25rem 4rem}
+.intro{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.5rem;max-width:68ch}
+.intro h2{font-size:2.1rem;color:var(--brand)}
+.intro p{color:var(--muted);font-size:1.05rem}
+.banner{background:var(--sunk);border:1px solid var(--line);color:var(--fg);border-radius:var(--r);padding:.6rem .9rem;font-size:.92rem;margin-bottom:1.25rem}
+
+.form-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:2rem;align-items:start}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 120px);display:flex;flex-direction:column;gap:.15rem}
+.rail button{display:flex;justify-content:space-between;gap:.5rem;text-align:left;border:0;background:none;color:var(--muted);padding:.35rem .6rem;border-radius:var(--r);font-size:.92rem;cursor:pointer;width:100%}
+.rail button:hover{background:var(--sunk);color:var(--fg)}
+.rail button .num{font-size:.78rem}
+.rail button.done{color:var(--fg)}
+.rail button.done .num{color:var(--good)}
+.rail .sub{display:flex;flex-direction:column;gap:.1rem;margin-left:.6rem;padding-left:.4rem;border-left:1px solid var(--line)}
+.rail .sub button{font-size:.86rem;padding:.25rem .5rem}
+.rail button.grp.open{color:var(--fg);font-weight:500}
+.rail button.cur{background:var(--accent-soft);color:var(--fg);font-weight:500;box-shadow:inset 3px 0 0 var(--cta)}
+.fact{margin-top:1.1rem;border:1px solid var(--line);border-radius:var(--r);background:var(--sunk);padding:.9rem 1rem;display:flex;flex-direction:column;gap:.45rem}
+.fact .fk{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--cta)}
+.fact .fb{font-family:var(--display);font-size:2rem;line-height:1;color:var(--brand)}
+.fact p{font-size:.92rem;line-height:1.4}
+.fact a,.fact .src{font-size:.75rem;color:var(--muted)}
+.fact-dots{display:flex;gap:.3rem;margin-top:.15rem}
+.fact-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer}
+.fact-dots button[aria-current="true"]{background:var(--brand)}
+#factMobile{display:none}
+.stepnav{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;padding-top:1rem;border-top:1px solid var(--line);margin-top:.5rem}
+.stepnav .count{margin-left:auto;color:var(--muted);font-size:.88rem}
+.progress{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden;margin:.6rem .6rem 0}
+.progress i{display:block;height:100%;background:var(--accent);width:0}
+
+section.block{display:flex;flex-direction:column;gap:1rem;padding-block:1.25rem;border-top:1px solid var(--line)}
+section.block:first-child{border-top:0;padding-top:0}
+.block-head{display:flex;flex-direction:column;gap:.3rem}
+.block-head p{color:var(--muted);max-width:65ch}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem 1.25rem}
+.field{display:flex;flex-direction:column;gap:.3rem;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label,.field .lbl{font-weight:600;font-size:.95rem}
+.field .hint{color:var(--muted);font-size:.85rem}
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.5rem .65rem;width:100%}
+textarea{min-height:4.5rem;resize:vertical}
+.choices{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line);border-radius:var(--r);padding:.3rem .75rem;background:var(--surface);cursor:pointer;font-size:.92rem}
+.chip input{accent-color:var(--accent);margin:0}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+
+.stmt{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:.2rem 1rem;padding:.9rem 0;border-top:1px dashed var(--line)}
+.stmt:first-of-type{border-top:0}
+.stmt .code{font-family:var(--mono);color:var(--muted);font-size:.9rem;padding-top:.1rem}
+.stmt .txt{font-weight:600}
+.scale{grid-column:2;display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:.35rem;margin-top:.45rem}
+.scale label{display:flex;flex-direction:column;align-items:center;gap:.15rem;border:1px solid var(--line);border-radius:var(--r);padding:.35rem .25rem;cursor:pointer;background:var(--surface);text-align:center;min-width:0}
+.scale label b{font-family:var(--mono);font-size:1rem}
+.scale label span{font-size:.72rem;color:var(--muted);line-height:1.2}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale label:has(input:checked){border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.scale label:has(input:checked) span{color:var(--accent-ink)}
+.scale label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.scale label.dk{padding-inline:.6rem}
+.dimhead{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.dimhead .num{color:var(--muted);font-size:.85rem}
+
+.consent{display:flex;flex-direction:column;gap:.6rem}
+.consent label{display:grid;grid-template-columns:auto 2rem minmax(0,1fr);gap:.6rem;align-items:start;border:1px solid var(--line);border-radius:var(--r);padding:.7rem .8rem;background:var(--surface);cursor:pointer}
+.consent label .box{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.consent input{accent-color:var(--accent);margin-top:.25rem}
+.consent small{display:block;color:var(--muted)}
+
+.actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.55rem 1rem;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--cta);color:var(--cta-ink);border-color:var(--cta)}
+.btn.navy{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.small{padding:.3rem .65rem;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin .7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn.primary:disabled {
+  opacity: .8;
+  cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner {
+    animation: none;
+  }
+}
+.err{color:var(--crit);font-size:.9rem}
+.note{color:var(--muted);font-size:.9rem}
+
+/* results */
+.score-card{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.4rem}
+.dial{display:flex;flex-direction:column;gap:.4rem}
+.dial .big{font-family:var(--display);font-size:4.2rem;font-weight:700;color:var(--brand);line-height:1}
+.dial .big small{font-size:1.2rem;color:var(--muted);font-weight:500}
+.level{display:inline-flex;align-self:flex-start;gap:.4rem;align-items:center;border-radius:999px;padding:.2rem .7rem;font-weight:700;font-size:.9rem;background:var(--accent-soft);color:var(--fg)}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:.4rem}
+.ladder i{height:8px;border-radius:2px;background:var(--sunk)}
+.ladder i.on{background:var(--accent)}
+.bars{display:flex;flex-direction:column;gap:.55rem}
+.bar{display:grid;grid-template-columns:minmax(0,12rem) minmax(0,1fr) 3rem;gap:.7rem;align-items:center}
+.bar .t{font-size:.92rem}
+.bar .track{position:relative;height:12px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.bar .track i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
+.bar .track i.weak{background:var(--mark)}
+.bar .track .tick{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.bar .v{text-align:right}
+.res-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.panel ul{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.35rem}
+.route{display:flex;gap:.6rem;align-items:flex-start}
+.pill{display:inline-block;border-radius:999px;padding:.1rem .55rem;font-size:.78rem;font-weight:700;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.neutral{background:var(--sunk);color:var(--muted)}
+.pill.accent{background:var(--accent-soft);color:var(--accent)}
+
+/* staff views */
+.toolbar{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin-bottom:1rem}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:.5rem .7rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk);position:sticky;top:0}
+td.r,th.r{text-align:right}
+tr:last-child td{border-bottom:0}
+.empty{padding:2rem;text-align:center;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem;margin-bottom:1rem}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:.8rem 1rem}
+.kpi b{display:block;font-family:var(--display);font-size:1.9rem;color:var(--brand)}
+.kpi span{color:var(--muted);font-size:.85rem}
+.stack{display:flex;height:14px;border-radius:4px;overflow:hidden;min-width:120px;background:var(--sunk)}
+.stack i{display:block;height:100%}
+.l1{background:var(--crit)}.l2{background:var(--mark)}.l3{background:var(--accent)}.l4{background:var(--good)}
+.legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:.3rem;vertical-align:-1px}
+.ins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem;margin-top:1.2rem}
+.ins .panel h3{font-size:1.1rem}
+.ins .who{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--cta)}
+.ins .big{font-family:var(--display);font-size:1.9rem;color:var(--brand);line-height:1}
+.ins ul{margin:0;padding-left:1.1rem}
+.bar .track .bm{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--cta);border-radius:2px}
+@media (max-width:860px){.ins{grid-template-columns:minmax(0,1fr)}}
+.dummy-panel{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;justify-content:space-between;border:1px dashed var(--cta);border-radius:var(--r);background:var(--mark-soft);padding:.8rem 1rem;margin-bottom:1rem}
+.dummy-panel p{margin-top:.15rem}
+.cfg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.8rem}
+details.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem;margin-bottom:1rem}
+details.box summary{cursor:pointer;font-weight:600}
+.gate{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:2rem;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:.55rem 1rem;border-radius:8px;font-size:.92rem;z-index:20}
+
+@media (max-width:860px){
+  .form-grid{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  #factMobile{display:flex;margin-top:1rem}
+  .score-card,.res-grid{grid-template-columns:minmax(0,1fr)}
+  .kpis,.cfg{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .fields{grid-template-columns:minmax(0,1fr)}
+  .stmt{grid-template-columns:minmax(0,1fr)}
+  .stmt .code{padding:0}
+  .scale{grid-column:1;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .scale label.dk{grid-column:1/-1;flex-direction:row;justify-content:center}
+  .scale label span{display:none}
+  .bar{grid-template-columns:minmax(0,1fr) 3rem}
+  .bar .t{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+/* =====================================================================
+   WIDE RESPONSIVE LAYOUT — visual-only override, no business logic changes
+   ===================================================================== */
+:root { --page-gutter: clamp(18px, 2.4vw, 48px); }
+html { overflow-x: clip; }
+body { min-width: 320px; }
+.top-in, .tabs, .wrap { max-width: none; width: 100%; margin-inline: auto; padding-inline: var(--page-gutter); }
+.top-in { padding-block: 1rem .75rem; }
+.tabs { gap: .65rem; }
+.tabs button { padding: .75rem 1rem; font-size: 1rem; }
+.wrap { padding-top: 1.5rem; padding-bottom: 5rem; }
+.intro { max-width: none; margin-bottom: 1.7rem; }
+.intro h2 { font-size: clamp(2rem, 2.65vw, 2.85rem); }
+.intro p { max-width: 100ch; font-size: 1.06rem; }
+.form-grid { grid-template-columns: clamp(220px, 18vw, 290px) minmax(0, 1fr); gap: clamp(22px, 2.4vw, 44px); }
+.rail { top: calc(env(safe-area-inset-top,0px) + 165px); }
+.rail button { padding-block: .47rem; font-size: .96rem; }
+.rail .sub button { font-size: .91rem; }
+section.block { padding-block: 1.65rem; gap: 1.2rem; }
+.block-head p { max-width: 95ch; }
+.stmt { grid-template-columns: 3rem minmax(0, 1fr); column-gap: 1.1rem; padding: 1.25rem 0; }
+.stmt .txt { font-size: clamp(.98rem, 1vw, 1.14rem); line-height: 1.45; }
+.scale { gap: .55rem; margin-top: .7rem; }
+.scale label { min-height: 75px; justify-content: center; padding: .6rem .35rem; }
+.scale label b { font-size: 1.12rem; }
+.scale label span { font-size: .83rem; }
+.scale label.dk { min-width: 90px; }
+.fields { gap: 1.15rem 1.5rem; }
+.field label,.field .lbl { font-size: 1rem; }
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea { min-height: 44px; }
+.score-card { grid-template-columns: minmax(220px, 25%) minmax(0, 1fr); }
+.tablebox { width: 100%; }
+@media (min-width: 1600px) {
+  .form-grid { grid-template-columns: 290px minmax(0,1fr); }
+  .scale label { min-height: 85px; }
+  .score-card { gap: 2.3rem; }
+}
+@media (max-width: 1024px) {
+  :root { --page-gutter: 22px; }
+  .form-grid { grid-template-columns: 205px minmax(0,1fr); gap: 22px; }
+  .scale { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .scale label.dk { min-width: 0; }
+  .scale label { min-height: 66px; }
+  .scale label span { font-size: .76rem; }
+}
+@media (max-width: 860px) {
+  :root { --page-gutter: 18px; }
+  .top-in { gap: .8rem; }
+  .form-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .rail { display: none; }
+  .scale { grid-template-columns: repeat(5,minmax(0,1fr)) auto; }
+  .scale label { min-height: 72px; }
+  .res-grid,.ins { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 600px) {
+  :root { --page-gutter: 14px; }
+  .top-in { padding-top: .8rem; }
+  .logos { gap: .65rem; }
+  .logos-main,.logos-tech { gap: .6rem; }
+  .logo-apindo,.logo-ecop { height: 29px; }
+  .logo-kat { height: 19px; }
+  .brand { flex: 1 1 100%; }
+  .brand h1 { font-size: clamp(1.4rem, 6vw, 1.9rem); }
+  .ctrls { width: 100%; justify-content: flex-start; }
+  .tabs { gap: .15rem; }
+  .tabs button { padding: .7rem .6rem; font-size: .9rem; }
+  .wrap { padding-top: 1.1rem; }
+  .intro { margin-bottom: 1.2rem; }
+  .intro h2 { font-size: 1.75rem; }
+  .intro p { font-size: .98rem; }
+  .banner { font-size: .85rem; }
+  .fields { grid-template-columns: minmax(0,1fr); }
+  .stmt { grid-template-columns: minmax(0,1fr); row-gap: .45rem; padding-block: 1.25rem; }
+  .stmt .code { font-size: .85rem; }
+  .stmt .txt { font-size: 1rem; }
+  .scale { grid-column: 1; grid-template-columns: repeat(5,minmax(0,1fr)); gap: .3rem; }
+  .scale label { min-height: 58px; padding: .4rem .12rem; }
+  .scale label b { font-size: 1.05rem; }
+  .scale label span { display: none; }
+  .scale label.dk { grid-column: 1/-1; min-height: 42px; flex-direction: row; justify-content: center; }
+  .scale label.dk span { display: inline; font-size: .83rem; }
+  .stepnav { gap: .5rem; }
+  .stepnav .count { flex-basis: 100%; margin-left: 0; }
+  .score-card { grid-template-columns: 1fr; padding: 1rem; }
+  .kpis,.cfg { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  th,td { padding: .55rem; }
+}
+@media (max-width: 360px) {
+  .tabs button { font-size: .81rem; padding-inline: .45rem; }
+  .scale { gap: .2rem; }
+  .scale label b { font-size: .96rem; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="top-in">
+    <div class="logos">
+      <div class="logos-main">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjEuMzUwIDYuMDAwIDE5NC42NTAgMTguMDkwIj48Y2lyY2xlIGN4PSI3LjQ4IiBjeT0iMTQuNiIgcj0iNi4xMyIgZmlsbD0iI0ZGRkZGRiIvPjxjaXJjbGUgY3g9IjIyLjQ4IiBjeT0iMTQuNiIgcj0iNS4xMSIgZmlsbD0iIzJEN0Q3RCIvPjxjaXJjbGUgY3g9IjM1LjQ3IiBjeT0iMTYuMzIiIHI9IjQuMDkiIGZpbGw9IiNGRjZCNDciLz48cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1MS4wNTU0MzE5MzM5MzY2IDIzLjc5NTc0NDExOTczMTY2Mikgc2NhbGUoMC4wMTE3ODUpIiBkPSJNMTY1IDBWLTE0OTBINDI4TDk4OSAtNjAzUTEwMTcgLTU1OSAxMDUyLjAgLTQ5OC4wUTEwODcgLTQzNyAxMTI2LjAgLTM2MC41UTExNjUgLTI4NCAxMjAzIC0xOTRIMTE3NVExMTY2IC0yNzkgMTE2MS41IC0zNjIuNVExMTU3IC00NDYgMTE1NS4wIC01MTkuMFExMTUzIC01OTIgMTE1MyAtNjQyVi0xNDkwSDEzODRWMEgxMTIwTDYxNyAtNzkzUTU3NyAtODU4IDUzOC41IC05MjQuMFE1MDAgLTk5MCA0NTMuNSAtMTA3Ni41UTQwNyAtMTE2MyAzNDAgLTEyODdIMzc2UTM4MSAtMTE3NyAzODYuMCAtMTA4MS41UTM5MSAtOTg2IDM5My41IC05MTIuNVEzOTYgLTgzOSAzOTYgLTc5NVYwWiBNMjQxMC40IDIzUTIyMzEuNCAyMyAyMDk3LjQgLTQ2LjBRMTk2My40IC0xMTUgMTg4OS45IC0yMzUuNVExODE2LjQgLTM1NiAxODE2LjQgLTUxMlYtMTQ5MEgyMDQ0LjRWLTUzMVEyMDQ0LjQgLTQzMCAyMDg4LjkgLTM1Mi4wUTIxMzMuNCAtMjc0IDIyMTUuNCAtMjI5LjBRMjI5Ny40IC0xODQgMjQxMC40IC0xODRRMjUyMi40IC0xODQgMjYwMy45IC0yMjkuMFEyNjg1LjQgLTI3NCAyNzI5LjQgLTM1Mi4wUTI3NzMuNCAtNDMwIDI3NzMuNCAtNTMxVi0xNDkwSDMwMDIuNFYtNTEyUTMwMDIuNCAtMzU2IDI5MjguOSAtMjM1LjVRMjg1NS40IC0xMTUgMjcyMS45IC00Ni4wUTI1ODguNCAyMyAyNDEwLjQgMjNaIE0zOTM0LjggMjVRMzc2Ny44IDI1IDM2NDQuOCAtMjguMFEzNTIxLjggLTgxIDM0NTIuMyAtMTc5LjVRMzM4Mi44IC0yNzggMzM3NS44IC00MTRIMzYwNC44UTM2MTEuOCAtMzMzIDM2NTcuMyAtMjgwLjBRMzcwMi44IC0yMjcgMzc3NS44IC0yMDEuMFEzODQ4LjggLTE3NSAzOTMzLjggLTE3NVE0MDI4LjggLTE3NSA0MTAyLjMgLTIwNC41UTQxNzUuOCAtMjM0IDQyMTguOCAtMjg4LjVRNDI2MS44IC0zNDMgNDI2MS44IC00MTVRNDI2MS44IC00ODAgNDIyNC4zIC01MjEuNVE0MTg2LjggLTU2MyA0MTIzLjMgLTU5MC41UTQwNTkuOCAtNjE4IDM5NzguOCAtNjM5TDM4MDQuOCAtNjg3UTM2MjEuOCAtNzM2IDM1MTkuMyAtODMyLjBRMzQxNi44IC05MjggMzQxNi44IC0xMDgxUTM0MTYuOCAtMTIxMCAzNDg2LjMgLTEzMDYuNVEzNTU1LjggLTE0MDMgMzY3NS4zIC0xNDU2LjVRMzc5NC44IC0xNTEwIDM5NDQuOCAtMTUxMFE0MDk3LjggLTE1MTAgNDIxNC4zIC0xNDU2LjVRNDMzMC44IC0xNDAzIDQzOTcuMyAtMTMxMC4wUTQ0NjMuOCAtMTIxNyA0NDY2LjggLTEwOThINDI0NC44UTQyMzMuOCAtMTIwMCA0MTUwLjMgLTEyNTYuMFE0MDY2LjggLTEzMTIgMzkzOS44IC0xMzEyUTM4NDkuOCAtMTMxMiAzNzgzLjMgLTEyODQuMFEzNzE2LjggLTEyNTYgMzY4MC4zIC0xMjA2LjVRMzY0My44IC0xMTU3IDM2NDMuOCAtMTA5NFEzNjQzLjggLTEwMjMgMzY4Ny4zIC05NzkuNVEzNzMwLjggLTkzNiAzNzkzLjMgLTkxMC41UTM4NTUuOCAtODg1IDM5MTIuOCAtODcwTDQwNTcuOCAtODMyUTQxMjguOCAtODE0IDQyMDQuMyAtNzgzLjVRNDI3OS44IC03NTMgNDM0My44IC03MDQuNVE0NDA3LjggLTY1NiA0NDQ3LjMgLTU4NC41UTQ0ODYuOCAtNTEzIDQ0ODYuOCAtNDEyUTQ0ODYuOCAtMjg2IDQ0MjEuOCAtMTg3LjBRNDM1Ni44IC04OCA0MjMzLjMgLTMxLjVRNDEwOS44IDI1IDM5MzQuOCAyNVogTTQ3MzYuMjAwMDAwMDAwMDAxIDAgNTI2Ni4yMDAwMDAwMDAwMDEgLTE0OTBINTU0Ni4yMDAwMDAwMDAwMDFMNjA4Ni4yMDAwMDAwMDAwMDEgMEg1ODM5LjIwMDAwMDAwMDAwMUw1NTQ5LjIwMDAwMDAwMDAwMSAtODI5UTU1MTUuMjAwMDAwMDAwMDAxIC05MzAgNTQ3NC43MDAwMDAwMDAwMDEgLTEwNjcuMFE1NDM0LjIwMDAwMDAwMDAwMSAtMTIwNCA1MzgxLjIwMDAwMDAwMDAwMSAtMTM5Nkg1NDI3LjIwMDAwMDAwMDAwMVE1Mzc2LjIwMDAwMDAwMDAwMSAtMTIwMiA1MzM1LjcwMDAwMDAwMDAwMSAtMTA2My41UTUyOTUuMjAwMDAwMDAwMDAxIC05MjUgNTI2NC4yMDAwMDAwMDAwMDEgLTgyOUw0OTgzLjIwMDAwMDAwMDAwMSAwWk01MDIzLjIwMDAwMDAwMDAwMSAtMzkzVi01ODNINTc5OC4yMDAwMDAwMDAwMDFWLTM5M1ogTTY0MDQuNiAwVi0xNDkwSDY2NjcuNkw3MjI4LjYgLTYwM1E3MjU2LjYgLTU1OSA3MjkxLjYgLTQ5OC4wUTczMjYuNiAtNDM3IDczNjUuNiAtMzYwLjVRNzQwNC42IC0yODQgNzQ0Mi42IC0xOTRINzQxNC42UTc0MDUuNiAtMjc5IDc0MDEuMSAtMzYyLjVRNzM5Ni42IC00NDYgNzM5NC42IC01MTkuMFE3MzkyLjYgLTU5MiA3MzkyLjYgLTY0MlYtMTQ5MEg3NjIzLjZWMEg3MzU5LjZMNjg1Ni42IC03OTNRNjgxNi42IC04NTggNjc3OC4xIC05MjQuMFE2NzM5LjYgLTk5MCA2NjkzLjEgLTEwNzYuNVE2NjQ2LjYgLTExNjMgNjU3OS42IC0xMjg3SDY2MTUuNlE2NjIwLjYgLTExNzcgNjYyNS42IC0xMDgxLjVRNjYzMC42IC05ODYgNjYzMy4xIC05MTIuNVE2NjM1LjYgLTgzOSA2NjM1LjYgLTc5NVYwWiBNODY3Ny4wIDIwUTg0ODQuMCAyMCA4MzMxLjUgLTcxLjVRODE3OS4wIC0xNjMgODA5MS41IC0zMzQuNVE4MDA0LjAgLTUwNiA4MDA0LjAgLTc0NFE4MDA0LjAgLTk4MyA4MDkxLjUgLTExNTQuNVE4MTc5LjAgLTEzMjYgODMzMS41IC0xNDE4LjBRODQ4NC4wIC0xNTEwIDg2NzcuMCAtMTUxMFE4ODcwLjAgLTE1MTAgOTAyMS41IC0xNDE4LjBROTE3My4wIC0xMzI2IDkyNjAuNSAtMTE1NC41UTkzNDguMCAtOTgzIDkzNDguMCAtNzQ0UTkzNDguMCAtNTA2IDkyNjAuNSAtMzM0LjVROTE3My4wIC0xNjMgOTAyMS41IC03MS41UTg4NzAuMCAyMCA4Njc3LjAgMjBaTTg2NzcuMCAtMTg4UTg4MDQuMCAtMTg4IDg5MDQuNSAtMjUxLjVROTAwNS4wIC0zMTUgOTA2My41IC00MzkuNVE5MTIyLjAgLTU2NCA5MTIyLjAgLTc0NFE5MTIyLjAgLTkyNiA5MDYzLjUgLTEwNTAuNVE5MDA1LjAgLTExNzUgODkwNC41IC0xMjM4LjVRODgwNC4wIC0xMzAyIDg2NzcuMCAtMTMwMlE4NTQ5LjAgLTEzMDIgODQ0OC4wIC0xMjM4LjBRODM0Ny4wIC0xMTc0IDgyODguNSAtMTA0OS41UTgyMzAuMCAtOTI1IDgyMzAuMCAtNzQ0UTgyMzAuMCAtNTY0IDgyODguNSAtNDQwLjBRODM0Ny4wIC0zMTYgODQ0OC4wIC0yNTIuMFE4NTQ5LjAgLTE4OCA4Njc3LjAgLTE4OFogTTEwMDgwLjQgMCA5NTQxLjQgLTE0OTBIOTc4Ny40TDEwMDc3LjQgLTY2MVExMDEwOS40IC01NjUgMTAxNTAuOSAtNDI2LjBRMTAxOTIuNCAtMjg3IDEwMjQ1LjQgLTk4SDEwMTk4LjRRMTAyNTAuNCAtMjkxIDEwMjkwLjkgLTQyOC4wUTEwMzMxLjQgLTU2NSAxMDM2Mi40IC02NjFMMTA2NDQuNCAtMTQ5MEgxMDg5MS40TDEwMzU5LjQgMFogTTEwOTQ4LjggMCAxMTQ3OC44IC0xNDkwSDExNzU4LjhMMTIyOTguOCAwSDEyMDUxLjhMMTE3NjEuOCAtODI5UTExNzI3LjggLTkzMCAxMTY4Ny4zIC0xMDY3LjBRMTE2NDYuOCAtMTIwNCAxMTU5My44IC0xMzk2SDExNjM5LjhRMTE1ODguOCAtMTIwMiAxMTU0OC4zIC0xMDYzLjVRMTE1MDcuOCAtOTI1IDExNDc2LjggLTgyOUwxMTE5NS44IDBaTTExMjM1LjggLTM5M1YtNTgzSDEyMDEwLjhWLTM5M1oiIGZpbGw9IiNGRkZGRkYiLz48L3N2Zz4=" alt="Nusanova" class="logo-nus" width="195" height="18">
+        <img src="data:image/png;base64,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" alt="APINDO" class="logo-apindo" id="logoApindo" width="120" height="120"><img src="data:image/png;base64,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" alt="Employers Confederation of the Philippines" class="logo-ecop" id="logoEcop" width="284" height="120" hidden>
+      </div>
+      <div class="logos-tech">
+        <span class="logo-label" id="techLabel">Mitra teknologi</span>
+        <img src="data:image/png;base64,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" alt="Kation Technologies" class="logo-kat" width="303" height="68">
+      </div>
+    </div>
+    <div class="brand">
+      <h1 id="appTitle">Profil Kesiapan AI</h1>
+      <small id="appSub2"></small>
+    </div>
+    <div class="ctrls">
+      <div class="seg" role="group" aria-label="Country">
+        <button type="button" id="cID" aria-pressed="true">Indonesia</button>
+        <button type="button" id="cPH" aria-pressed="false">Philippines</button>
+      </div>
+      <div class="seg" role="group" aria-label="Language">
+        <button type="button" id="lID" aria-pressed="true">BI</button>
+        <button type="button" id="lEN" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabAssess" aria-selected="true"></button>
+    <button type="button" role="tab" id="tabProgram" aria-selected="false" hidden></button>
+    <button type="button" role="tab" id="tabIndex" aria-selected="false" hidden></button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner"></div>
+  <div id="viewAssess"></div>
+  <div id="viewResult" hidden></div>
+  <div id="viewProgram" hidden></div>
+  <div id="viewIndex" hidden></div>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* ============================================================
+   SITE CONFIGURATION — edit these three lines when deploying
+   endpoint: the Google Apps Script web app URL (see README).
+             Leave "" to run in local demo mode (answers stay in
+             each reviewer's own browser only).
+   key:      the shared review key, same value as in Code.gs.
+   reviewMode: true shows the Program and Index tabs to everyone.
+               Set to false before any real pilot.
+   ============================================================ */
+const CONFIG = {
+  // Update alamat ini setelah subdomain API dan HTTPS aktif.
+  endpoint: "https://api-ai.nusanova.org/api",
+  key: "",
+  reviewMode: true
+};
+
+/* ---------- storage adapter: Google Apps Script or local demo ---------- */
+const Store = (() => {
+  const remote = !!CONFIG.endpoint;
+  const LS = "pka-demo-";
+  const lsGet = (k, d) => { try { const v = localStorage.getItem(LS + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) {} };
+  async function request(action, data) {
+    const isGet = data === undefined;
+    const url = new URL(CONFIG.endpoint);
+    if (isGet) url.searchParams.set("action", action);
+    const options = isGet
+      ? { method: "GET", cache: "no-store" }
+      : {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, data })
+        };
+    const response = await fetch(url.toString(), options);
+    const raw = await response.text();
+    let result;
+    try { result = JSON.parse(raw); }
+    catch { throw new Error("API returned non-JSON response (HTTP " + response.status + ")"); }
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || "API request failed (HTTP " + response.status + ")");
+    }
+    return result.data;
+  }
+  async function get(action) { return request(action); }
+  async function post(action, data) { return request(action, data); }
+  return {
+    mode: remote ? "shared" : "local",
+    async save(id, doc) { if (remote) return post("save", { id, doc }); const all = lsGet("responses", {}); all[id] = doc; lsSet("responses", all); },
+    async saveMany(items) { if (remote) return post("saveMany", { items }); const all = lsGet("responses", {}); items.forEach(x => all[x.id] = x.doc); lsSet("responses", all); },
+    async clearDummy() { if (remote) return post("clearDummy", {}); const all = lsGet("responses", {}); Object.keys(all).forEach(k => { if (all[k].dummy) delete all[k]; }); lsSet("responses", all); },
+    async list() { if (remote) return get("list"); const all = lsGet("responses", {}); return Object.entries(all).map(([id, d]) => ({ ...d, _id: id })); },
+    async confirm(id, review) { if (remote) return post("confirm", { id, review }); const all = lsGet("responses", {}); if (all[id]) { all[id].review = review; lsSet("responses", all); } },
+    async getConfig() { if (remote) return get("config"); return lsGet("config", null); },
+    async setConfig(cfg) { if (remote) return post("config", cfg); lsSet("config", cfg); },
+    async getBench() { if (remote) return get("bench"); return lsGet("bench", null); },
+    async setBench(b) { if (remote) return post("bench", b); lsSet("bench", b); }
+  };
+})();
+function newId() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+/* ---------- content (framework v1, 10 Oct 2026) ---------- */
+const DIMS = [
+  {id:"D1", w:.15, en:"Strategy and leadership", id_:"Strategi & kepemimpinan", items:[
+    ["1.1","Leadership knows which business problems AI could help solve.","Pimpinan kami sudah tahu masalah bisnis apa saja yang bisa dibantu oleh AI."],
+    ["1.2","We have a written plan or budget for digital or AI improvements in the next 12 months.","Kami punya rencana atau anggaran tertulis untuk pengembangan digital atau AI dalam 12 bulan ke depan."],
+    ["1.3","Someone is in charge of leading our digital or AI work.","Sudah ada orang yang ditugaskan memimpin urusan digital atau AI di usaha kami."],
+    ["1.4","We track what changes when we adopt new technology, such as time saved, cost or sales.","Kami memantau hasil setiap perubahan teknologi, misalnya waktu yang lebih hemat, biaya, atau penjualan."]]},
+  {id:"D2", w:.20, en:"Digital foundations", id_:"Fondasi digital", items:[
+    ["2.1","Our team has reliable internet at work.","Tim kami punya akses internet yang lancar di tempat kerja."],
+    ["2.2","Work email and documents use company accounts, not personal ones.","Email dan dokumen kerja memakai akun perusahaan, bukan akun pribadi."],
+    ["2.3",{ID:"Key records (sales, stock, finance) live in software, not only on paper or in WhatsApp groups.",PH:"Key records (sales, stock, finance) live in software, not only on paper or in Messenger or Viber groups."},"Catatan penting (penjualan, stok, keuangan) sudah tersimpan di aplikasi, tidak hanya di buku atau grup WhatsApp."],
+    ["2.4","Everyone has their own login, two-step sign-in is on, and we back up data regularly.","Setiap orang punya akun sendiri, verifikasi dua langkah sudah aktif, dan data rutin dicadangkan."]]},
+  {id:"D3", w:.15, en:"Data readiness", id_:"Kesiapan data", items:[
+    ["3.1","We know where our important business data is kept.","Kami tahu di mana data penting usaha kami tersimpan."],
+    ["3.2","Our data is mostly complete and tidy, such as customer names and product codes.","Data kami umumnya lengkap dan rapi, misalnya nama pelanggan dan kode produk."],
+    ["3.3","File access is set by role, so people only open what they need.","Akses file diatur sesuai peran, jadi setiap orang hanya membuka yang memang ia perlukan."],
+    ["3.4","We can pull a report from our data without retyping it.","Kami bisa menarik laporan dari data yang ada tanpa harus mengetik ulang."]]},
+  {id:"D4", w:.20, en:"People and skills", id_:"Tim & keterampilan", items:[
+    ["4.1","Most of our team is comfortable with everyday digital tools.","Sebagian besar tim kami sudah terbiasa dengan aplikasi digital sehari-hari."],
+    ["4.2","Some of our team already use AI tools, such as chat assistants, at work.","Beberapa orang di tim sudah memakai alat AI, seperti asisten chat, untuk bekerja."],
+    ["4.3","Our team has had some training on AI or on writing prompts.","Tim kami pernah ikut pelatihan tentang AI atau cara menulis prompt."],
+    ["4.4","Our team gets time and encouragement to try new tools.","Tim kami diberi waktu dan semangat untuk mencoba alat-alat baru."]]},
+  {id:"D5", w:.15, en:"AI in daily work", id_:"AI dalam pekerjaan sehari-hari", items:[
+    ["5.1","We have listed the repetitive tasks that take up most of our team's time.","Kami sudah mendata pekerjaan berulang yang paling banyak menyita waktu tim."],
+    ["5.2","We already use AI for at least one regular task, such as email, documents, customer replies or bookkeeping.","AI sudah kami pakai untuk minimal satu pekerjaan rutin, misalnya email, dokumen, membalas pelanggan, atau pembukuan."],
+    ["5.3","Sales or customer service runs on digital channels (marketplaces, social media, chat).","Penjualan atau layanan pelanggan kami sudah berjalan lewat kanal digital (marketplace, media sosial, chat)."],
+    ["5.4","We try new tools on a small scale before rolling them out.","Sebelum memakai alat baru secara luas, kami mencobanya dulu dalam skala kecil."]]},
+  {id:"D6", w:.15, en:"Governance, privacy and responsible AI", id_:"Tata kelola, privasi & AI yang bertanggung jawab", items:[
+    ["6.1",{ID:"We have a privacy notice and understand our duties under the Personal Data Protection Law (UU PDP).",PH:"We have a privacy notice and understand our duties under the Data Privacy Act."},"Kami punya pemberitahuan privasi dan memahami kewajiban kami menurut UU Pelindungan Data Pribadi."],
+    ["6.2","We have clear rules on what company or customer data can go into AI tools.","Ada aturan yang jelas soal data perusahaan atau pelanggan apa yang boleh dimasukkan ke alat AI."],
+    ["6.3","Someone always checks AI output before it reaches customers or decisions.","Hasil kerja AI selalu dicek oleh orang sebelum dipakai untuk pelanggan atau mengambil keputusan."],
+    ["6.4","We have talked with our team about how AI may change their jobs and roles.","Kami sudah mengajak tim berdiskusi tentang dampak AI terhadap pekerjaan dan peran mereka."]]}
+];
+const SCALE = [["Not yet","Belum sama sekali"],["Just starting","Baru mulai"],["Partly","Sebagian sudah"],["Mostly","Hampir semua"],["Fully, and we review it","Sudah jalan & rutin dicek"]];
+const LEVELS = [
+  {n:1,en:"Getting started",id:"Mulai mengenal",recEn:"A good first step: short training on digital basics and what AI can do for you.",recId:"Langkah pertama yang pas: pelatihan singkat soal dasar digital dan apa yang bisa AI lakukan untuk usaha Anda."},
+  {n:2,en:"Building foundations",id:"Menyiapkan fondasi",recEn:"Tidy up accounts, data and security first, then try AI with some guidance.",recId:"Rapikan dulu akun, data, dan keamanan, lalu coba AI dengan pendampingan."},
+  {n:3,en:"Putting AI to work",id:"Mulai menerapkan",recEn:"You're ready for a focused AI pilot with a partner.",recId:"Usaha Anda sudah siap untuk uji coba AI yang terarah bersama mitra."},
+  {n:4,en:"Ready to scale",id:"Siap berkembang",recEn:"AI can become a bigger business project, and you may be a good fit for financing.",recId:"AI bisa jadi proyek bisnis yang lebih besar, dan usaha Anda layak dipertimbangkan untuk pembiayaan."}
+];
+const ID_PROV = ["Aceh","Sumatera Utara","Sumatera Barat","Riau","Kepulauan Riau","Jambi","Sumatera Selatan","Kepulauan Bangka Belitung","Bengkulu","Lampung","Jakarta","Jawa Barat","Banten","Jawa Tengah","DI Yogyakarta","Jawa Timur","Bali","Nusa Tenggara Barat","Nusa Tenggara Timur","Kalimantan Barat","Kalimantan Tengah","Kalimantan Selatan","Kalimantan Timur","Kalimantan Utara","Sulawesi Utara","Gorontalo","Sulawesi Tengah","Sulawesi Barat","Sulawesi Selatan","Sulawesi Tenggara","Maluku","Maluku Utara","Papua","Papua Barat","Papua Barat Daya","Papua Tengah","Papua Pegunungan","Papua Selatan"];
+const PH_REG = ["NCR – National Capital Region","CAR – Cordillera","I – Ilocos Region","II – Cagayan Valley","III – Central Luzon","IV-A – CALABARZON","IV-B – MIMAROPA","V – Bicol Region","VI – Western Visayas","NIR – Negros Island Region","VII – Central Visayas","VIII – Eastern Visayas","IX – Zamboanga Peninsula","X – Northern Mindanao","XI – Davao Region","XII – SOCCSKSARGEN","XIII – Caraga","BARMM"];
+const SECTORS = [["A","Agriculture, forestry and fishing","Pertanian, kehutanan, dan perikanan"],["B","Mining and quarrying","Pertambangan dan penggalian"],["C","Manufacturing","Industri pengolahan"],["D","Electricity and gas supply","Pengadaan listrik dan gas"],["E","Water supply and waste management","Pengadaan air dan pengelolaan limbah"],["F","Construction","Konstruksi"],["G","Wholesale and retail trade","Perdagangan besar dan eceran"],["H","Transportation and storage","Pengangkutan dan pergudangan"],["I","Accommodation and food service","Penyediaan akomodasi dan makan minum"],["J","Information and communication","Informasi dan komunikasi"],["K","Financial and insurance","Aktivitas keuangan dan asuransi"],["L","Real estate","Real estat"],["M","Professional, scientific and technical","Aktivitas profesional, ilmiah, dan teknis"],["N","Administrative and support services","Aktivitas penunjang usaha"],["P","Education","Pendidikan"],["Q","Health and social work","Kesehatan dan kegiatan sosial"],["R","Arts, entertainment and recreation","Kesenian, hiburan, dan rekreasi"],["S","Other services","Aktivitas jasa lainnya"]];
+const OPT = {
+  legal:[["sole","Sole proprietor (UD)","Usaha perseorangan (UD)"],["partner","Partnership (CV / firm)","Persekutuan (CV / firma)"],["corp","PT, including individual PT (PT Perorangan)","PT, termasuk PT Perorangan"],["coop","Cooperative","Koperasi"]],
+  legalPH:[["sole","Sole proprietorship (DTI-registered)","Sole proprietorship (DTI-registered)"],["partner","Partnership (SEC-registered)","Partnership (SEC-registered)"],["corp","Corporation, including One Person Corporation","Corporation, including One Person Corporation"],["coop","Cooperative (CDA-registered)","Cooperative (CDA-registered)"]],
+  years:[["lt2","Under 2 years","Kurang dari 2 tahun"],["2-5","2–5 years","2–5 tahun"],["6-10","6–10 years","6–10 tahun"],["gt10","Over 10 years","Lebih dari 10 tahun"]],
+  sizeID:[["m","Up to Rp2 billion","Sampai Rp2 miliar"],["s","Rp2–15 billion","Rp2–15 miliar"],["md","Rp15–50 billion","Rp15–50 miliar"],["l","Over Rp50 billion","Lebih dari Rp50 miliar"]],
+  sizePH:[["m","Up to ₱3 million","Up to ₱3 million"],["s","₱3–15 million","₱3–15 million"],["md","₱15–100 million","₱15–100 million"],["l","Over ₱100 million","Over ₱100 million"]],
+  office:[["none","None","Tidak ada"],["m365basic","Microsoft 365 Business Basic","Microsoft 365 Business Basic"],["m365std","Microsoft 365 Business Standard","Microsoft 365 Business Standard"],["m365prem","Microsoft 365 Business Premium","Microsoft 365 Business Premium"],["m365other","Other Microsoft 365 plan","Paket Microsoft 365 lainnya"],["gws","Google Workspace","Google Workspace"],["other","Other","Lainnya"],["unsure","Not sure","Tidak tahu"]],
+  ynp:[["yes","Yes","Ya"],["no","No","Tidak"],["na","Prefer not to say","Tidak ingin menjawab"]],
+  yn:[["yes","Yes","Ya"],["no","No","Tidak"]],
+  ynu:[["yes","Yes","Ya"],["no","No","Tidak"],["unsure","Not sure","Tidak tahu"]],
+  role:[["owner","Owner","Pemilik"],["director","Director","Direktur"],["manager","Manager","Manajer"],["it","IT staff","Staf TI"],["other","Other","Lainnya"]],
+  cost:[["lt5","Under US$5,000","Di bawah US$5.000"],["5-25","US$5,000–25,000","US$5.000–25.000"],["25-100","US$25,000–100,000","US$25.000–100.000"],["100-500","US$100,000–500,000","US$100.000–500.000"],["gt500","Over US$500,000","Di atas US$500.000"]],
+  fund:[["cash","Own cash","Dana sendiri"],["bank","Bank loan","Pinjaman bank"],["lease","Leasing","Leasing"],["grant","Grant","Hibah"],["equity","Equity investor","Investor ekuitas"],["unsure","Not sure","Belum tahu"]],
+  records:[["audited","Audited statements","Laporan keuangan diaudit"],["unaudited","Unaudited statements","Laporan keuangan tidak diaudit"],["books","Bookkeeping only","Hanya pembukuan"],["none","None","Tidak ada"]],
+  support:[["training","Training","Pelatihan"],["pilot","Trying an AI tool with a partner","Mencoba alat AI bersama mitra"],["finance","Financing","Pembiayaan"],["none","None","Tidak ada"]]
+};
+const COURSES = {
+  fluencyID:"https://learn.ioe-emp.org/courses/ai-fluency-id/",
+  fluencyEN:"https://learn.ioe-emp.org/courses/ai-fluency-en/",
+  smes:"https://learn.ioe-emp.org/courses/ai-for-smes-en/"
+};
+const DEFAULT_CFG = {itMin:25, scoreMin:50, d2Min:50, capD2:40, copilotUsers:25, publishMin:30, internalMin:10};
+
+/* ---------- UI strings ---------- */
+const T = {
+  benchLine:["The red marks show the average for businesses your size in your country: {m} overall, from {n} businesses.","Tanda merah menunjukkan rata-rata usaha seukuran Anda di negara yang sama: {m} secara keseluruhan, dari {n} usaha."],
+  railDims:["AI readiness (6 short parts)","Kesiapan AI (6 bagian singkat)"],
+  back:["Back","Kembali"], nextStep:["Next","Lanjut"], stepOf:["Step {n} of 9","Langkah {n} dari 9"], factKey:["Did you know?","Tahukah Anda?"], tipKey:["Quick tip","Tips singkat"],
+  tabAssess:["Assessment","Asesmen"], tabProgram:["Program view","Tampilan program"], tabIndex:["Readiness index","Indeks kesiapan"],
+  banner:["This is a prototype for pilot testing. Please use test or pilot data only for now.","Ini prototipe untuk uji coba. Untuk sementara, gunakan data uji atau data pilot saja ya."],
+  prog:["Part of the IOE AI Xcelerate program","Bagian dari program AI Xcelerate IOE"],
+  sub:["AI readiness for employers · Nusanova with APINDO","Cek kesiapan AI usaha Anda · Nusanova bersama APINDO"],
+  subPH:["AI readiness for employers · Nusanova with ECOP","AI readiness for employers · Nusanova with ECOP"],
+  introH:["How ready is your business for AI?","Seberapa siap usaha Anda memanfaatkan AI?"],
+  introP:["Take about 15 minutes to see where your business stands today and what a sensible next step looks like. There are no right or wrong answers, so just tell us how things really are. You'll get your results straight away, with free courses picked for you.","Luangkan sekitar 15 menit untuk melihat posisi usaha Anda saat ini dan langkah berikutnya yang paling pas. Tidak ada jawaban benar atau salah, ceritakan saja kondisi yang sebenarnya. Hasilnya langsung muncul, lengkap dengan rekomendasi kursus gratis untuk Anda."],
+  secProfile:["About your business","Tentang usaha Anda"], secProfileP:["About 3 minutes. This helps us compare you with businesses of a similar size.","Sekitar 3 menit. Ini membantu kami membandingkan usaha Anda dengan usaha lain yang ukurannya serupa."],
+  secInvest:["Your plans and the support you need","Rencana Anda dan dukungan yang dibutuhkan"], secInvestP:["Not scored. It helps us connect you with the right training, technology partner or financing.","Bagian ini tidak dinilai. Jawaban Anda membantu kami menghubungkan Anda dengan pelatihan, mitra teknologi, atau pembiayaan yang tepat."],
+  secContact:["Staying in touch","Tetap terhubung"], secContactP:["So we can send you the right follow-up. Our program team reaches out to every business that takes part.","Supaya kami bisa menindaklanjuti dengan tepat. Tim program kami akan menghubungi setiap usaha yang ikut serta."],
+  agree:["I agree that Nusanova uses my answers to prepare my report and an anonymous readiness index, and that Nusanova, APINDO and the program partners (Kation Technologies and the Nusanova transition facility team) may contact me about training, technology support or financing that fits my results. I can withdraw this at any time by contacting Nusanova.","Saya setuju Nusanova memakai jawaban saya untuk menyusun laporan saya dan indeks kesiapan yang anonim, serta bahwa Nusanova, APINDO, dan mitra program (Kation Technologies dan tim fasilitas transisi Nusanova) dapat menghubungi saya soal pelatihan, dukungan teknologi, atau pembiayaan yang sesuai dengan hasil saya. Saya dapat menarik persetujuan ini kapan saja dengan menghubungi Nusanova."],
+  agreePH:["I agree that Nusanova uses my answers to prepare my report and an anonymous readiness index, and that Nusanova, ECOP and the program partners (Kation Technologies and the Nusanova transition facility team) may contact me about training, technology support or financing that fits my results. I can withdraw this at any time by contacting Nusanova.","I agree that Nusanova uses my answers to prepare my report and an anonymous readiness index, and that Nusanova, ECOP and the program partners (Kation Technologies and the Nusanova transition facility team) may contact me about training, technology support or financing that fits my results. I can withdraw this at any time by contacting Nusanova."],
+  agreeS:["Needed to see your results. Partners only receive businesses whose results match what they offer.","Diperlukan untuk melihat hasil Anda. Mitra hanya menerima data usaha yang hasilnya sesuai dengan layanan mereka."],
+  scoredNote:["4 statements · weight","4 pernyataan · bobot"],
+  dk:["Not sure","Belum tahu"],
+  company:["Business name","Nama usaha"], region:["Province","Provinsi"], regionPH:["Region","Region"],
+  sector:["Main line of business","Bidang usaha utama"], legal:["Type of business entity","Bentuk usaha"], years:["How long have you been operating?","Sudah berapa lama usaha berjalan?"],
+  staff:["Full-time employees","Karyawan penuh waktu"], staffH:["Everyone on your payroll working full hours, including you","Semua karyawan yang bekerja penuh waktu dan digaji rutin, termasuk Anda"],
+  staffC:["Contractors, part-time or daily workers","Pekerja kontrak, paruh waktu, atau harian"], staffCH:["Freelancers, outsourced, part-time or daily-paid people who work with you regularly","Freelance, outsourcing, paruh waktu, atau dibayar harian yang rutin bekerja dengan Anda"], size:["Annual turnover","Omzet per tahun"], sizePH:["Total assets (excluding land)","Total assets (excluding land)"],
+  daily:["How many use a computer every day?","Berapa orang yang memakai komputer setiap hari?"], office:["Main office software","Aplikasi kantor yang paling sering dipakai"],
+  women:["Is the business women-owned or women-led?","Apakah usaha ini dimiliki atau dipimpin perempuan?"], exports:["Do you export or sell across borders?","Apakah Anda mengekspor atau berjualan ke luar negeri?"],
+  member:["Are you an APINDO member?","Apakah Anda anggota APINDO?"], memberPH:["Are you an ECOP member?","Are you an ECOP member?"], role:["Your role","Peran Anda di usaha ini"],
+  pledge:["How many of your team would like to join the free IOE AI Xcelerate course?","Berapa orang di tim Anda yang ingin ikut kursus gratis AI Xcelerate dari IOE?"],
+  i1:["Is there an AI or digital project you'd like to start in the next 12 months?","Apakah ada proyek AI atau digital yang ingin Anda mulai dalam 12 bulan ke depan?"],
+  i1d:["Tell us about it in a sentence","Ceritakan singkat dalam satu kalimat"],
+  i2:["Roughly how much might it cost?","Kira-kira berapa biayanya?"], i3:["How are you thinking of paying for it?","Rencananya dibiayai dari mana?"],
+  i4:["What financial records do you keep?","Catatan keuangan apa yang Anda punya?"], i5:["Do you have a loan with a bank or finance company?","Apakah saat ini Anda punya pinjaman di bank atau lembaga pembiayaan?"],
+  i6:["What kind of support would help you most?","Dukungan seperti apa yang paling membantu Anda?"],
+  cname:["Your name","Nama Anda"], cemail:["Email","Email"], cphone:["Phone or WhatsApp","Nomor HP atau WhatsApp"], cphonePH:["Mobile number","Mobile number"],
+  boxR:["I'm happy for Nusanova to use my answers to prepare my report and an anonymous readiness index.","Saya setuju Nusanova memakai jawaban saya untuk menyusun laporan saya dan indeks kesiapan yang anonim."],
+  boxRs:["Needed to see your results.","Diperlukan untuk melihat hasil Anda."],
+  boxP:["APINDO may get in touch about training and programs.","APINDO boleh menghubungi saya soal pelatihan dan program."],
+  boxPPH:["ECOP may get in touch about training and programs.","ECOP may get in touch about training and programs."],
+  boxK:["Please share my contact details and results with Kation Technologies so they can talk with me about using AI.","Silakan bagikan kontak dan hasil saya ke Kation Technologies supaya mereka bisa berdiskusi dengan saya soal penerapan AI."],
+  boxF:["Please share my results and project details with the Nusanova transition facility team to look at financing options.","Silakan bagikan hasil dan detail proyek saya ke tim fasilitas transisi Nusanova untuk melihat peluang pembiayaan."],
+  optional:["Optional.","Opsional."],
+  test:["This is a test entry (prototype)","Ini entri uji coba (prototipe)"],
+  example:["Try it with example answers","Coba dengan contoh jawaban"],
+  submit:["See my results","Lihat hasil saya"],
+  missing:["Almost there! Please answer every statement and tick the agreement box to see your results. Still open:","Sedikit lagi! Jawab semua pernyataan dan centang kotak persetujuan untuk melihat hasil Anda. Yang belum terisi:"],
+  needContact:["Add your name and email so we can reach you.","Isi nama dan email supaya kami bisa menghubungi Anda."],
+  needStaff:["Let us know how many full-time employees you have.","Isi dulu jumlah karyawan penuh waktu di usaha Anda ya."],
+  resTitle:["Your AI readiness","Kesiapan AI usaha Anda"], outOf:["/100","/100"], level:["Level","Level"],
+  dims:["Your score by area","Skor Anda per bidang"], focus:["A good place to start","Bagian yang paling pas untuk dimulai"],
+  courses:["Free courses we recommend for you","Kursus gratis yang kami sarankan untuk Anda"], next:["What happens next","Langkah selanjutnya"],
+  routeCap:["Training and clinics with APINDO.","Pelatihan dan klinik bersama APINDO."], routeCapPH:["Training and clinics with ECOP.","Training and clinics with ECOP."],
+  routeCapD:["We'll invite you to the IOE courses and check in again in 6 months to see your progress.","Kami akan mengundang Anda ke kursus IOE dan mengajak cek ulang dalam 6 bulan untuk melihat perkembangannya."],
+  routeK:["A conversation with Kation Technologies, our technology partner.","Ngobrol dengan Kation Technologies, mitra teknologi kami."],
+  routeKD:["Kation will reach out once our program team has confirmed.","Kation akan menghubungi Anda setelah tim program kami mengonfirmasi."],
+  routeCF:["Your setup may suit a 30-day Microsoft 365 Copilot trial, if it's still on offer.","Sistem Anda mungkin cocok untuk uji coba Microsoft 365 Copilot selama 30 hari, jika masih tersedia."],
+  routePilot:["An AI in 30 pilot using the tools you already have.","Uji coba AI in 30 dengan aplikasi yang sudah Anda pakai sekarang."],
+  routeIT:["Kation category: Imagine Together","Kategori Kation: Imagine Together"],
+  routeITD:["Your business fits Kation's Imagine Together: a 2–4 week in-depth assessment and a quick-wins roadmap for AI.","Usaha Anda cocok untuk Imagine Together dari Kation: asesmen mendalam 2–4 minggu dan peta jalan quick wins untuk AI."],
+  routeITK:["You ticked box K, so Kation will reach out once our program team has confirmed.","Anda sudah mencentang kotak K, jadi Kation akan menghubungi Anda setelah tim program kami mengonfirmasi."],
+  routeITnoK:["Tick box K if you'd like Kation to contact you about it.","Centang kotak K kalau Anda ingin dihubungi Kation soal ini."],
+  routeUC:["Category: Up and coming","Kategori: Usaha Berkembang (Up and coming)"],
+  routeUCD:["Your team is still lean, but your score shows real potential. We've flagged you as an up-and-coming business, so Kation can look at whether Imagine Together suits you.","Tim Anda masih ramping, tetapi skor Anda menunjukkan potensi yang kuat. Kami menandai usaha Anda sebagai usaha yang sedang berkembang, sehingga Kation bisa menilai apakah Imagine Together cocok untuk Anda."],
+  routeITneutral:["Not on Microsoft 365? The AI in 30 pilot with your current tools is also open to you.","Belum memakai Microsoft 365? Uji coba AI in 30 dengan aplikasi yang sudah Anda pakai juga bisa jadi pilihan."],
+  routeF:["A financing review by the Nusanova transition facility.","Penilaian peluang pembiayaan oleh fasilitas transisi Nusanova."],
+  routeFD:["The facility team will take a look at your project.","Tim fasilitas akan mempelajari proyek Anda."],
+  routeReady:["You're ready to work with a technology partner. Tick box K if you'd like one to contact you.","Usaha Anda sudah siap bekerja sama dengan mitra teknologi. Centang kotak K kalau Anda ingin dihubungi."],
+  pending:["Our program team checks every referral personally before anyone contacts you.","Tim program kami memeriksa setiap rujukan terlebih dahulu sebelum ada yang menghubungi Anda."],
+  saved:["Saved. Thank you!","Tersimpan. Terima kasih!"],
+  savedTest:["Saved as a test entry.","Tersimpan sebagai entri uji coba."],
+  notSaved:["Your results are below, but they couldn't be saved. Please check your connection and submit again.","Hasil Anda ada di bawah, tetapi belum bisa disimpan. Periksa koneksi Anda lalu kirim ulang."],
+  edit:["Change my answers","Ubah jawaban saya"], restart:["Start a new assessment","Mulai asesmen baru"],
+  pct:["Once 30 businesses of your size in your country have taken part, you'll also see how you compare.","Setelah 30 usaha seukuran Anda di negara yang sama ikut serta, Anda juga bisa melihat posisi Anda dibandingkan mereka."],
+  dkFlag:["You answered \"Not sure\" quite a few times. That's fine; our team may call to help fill in the gaps.","Anda cukup sering menjawab \"Belum tahu\". Tidak apa-apa, tim kami mungkin akan menghubungi untuk membantu melengkapinya."],
+  d6Flag:["Data protection is a good area to start. Three quick wins: a privacy notice, simple rules for AI tools, and a person checking AI output.","Pelindungan data bisa jadi titik awal yang baik. Tiga langkah cepat: buat pemberitahuan privasi, aturan sederhana untuk alat AI, dan pastikan hasil AI dicek orang."],
+  staffOnly:["Program and index views are for Nusanova, APINDO and ECOP staff with Editor access.","Tampilan program dan indeks khusus untuk staf Nusanova, APINDO, dan ECOP dengan akses Editor."]
+};
+/* ---------- factoids (sourced AI facts and practical tips, per step) ---------- */
+const WTI_ID = "https://news.microsoft.com/id-id/2024/06/11/microsoft-and-linkedin-release-the-2024-work-trend-index-on-the-state-of-ai-at-work-in-indonesia/";
+const WTI_PH = "https://news.microsoft.com/en-ph/2024/05/23/microsoft-and-linkedin-release-2024-work-trend-index-on-ai-use-at-work-in-the-philippines/";
+const FACTS = {
+ 0:[
+  {c:"ID", big:"92%", en:"92% of knowledge workers in Indonesia already use generative AI at work, well above the global figure of 75%.", id:"92% pekerja kantoran di Indonesia sudah memakai AI generatif dalam pekerjaannya, jauh di atas angka global 75%.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_ID},
+  {c:"PH", big:"86%", en:"86% of Filipino knowledge workers already use AI at work, one of the highest shares in the world.", id:"86% of Filipino knowledge workers already use AI at work, one of the highest shares in the world.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_PH},
+  {tip:true, en:"Not sure of an exact number? A good estimate is fine. You can change your answers before you see your results.", id:"Tidak tahu angka pastinya? Perkiraan saja sudah cukup. Jawaban masih bisa diubah sebelum melihat hasil."}
+ ],
+ 1:[
+  {c:"ID", big:"92%", en:"92% of leaders in Indonesia say they need to adopt AI to stay competitive, yet 48% worry their organisation's leadership has no vision or plan for it.", id:"92% pimpinan di Indonesia merasa perlu memakai AI agar tetap kompetitif, tetapi 48% khawatir pimpinan organisasinya belum punya visi dan rencana AI.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_ID},
+  {c:"PH", big:"55%", en:"89% of Filipino leaders say they must adopt AI to stay competitive, but 55% worry their organisation has no plan or vision for it.", id:"89% of Filipino leaders say they must adopt AI to stay competitive, but 55% worry their organisation has no plan or vision for it.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_PH},
+  {c:"PH", big:"₱2.6T", en:"Wider AI adoption by businesses could add up to ₱2.6 trillion a year to the Philippine economy.", id:"Wider AI adoption by businesses could add up to ₱2.6 trillion a year to the Philippine economy.", src:"DTI, National AI Strategy Roadmap 2.0", url:"https://www.usasean.org/article/philippines-unveils-enhanced-national-ai-strategy-and-research-ambitions"},
+  {tip:true, en:"Start with one business problem, not one tool. \"We spend two days a month on invoices\" is a better starting point than \"we should use AI\".", id:"Mulailah dari satu masalah bisnis, bukan dari satu alat. \"Tim kami menghabiskan dua hari sebulan untuk faktur\" adalah titik awal yang lebih baik daripada \"kita harus pakai AI\"."}
+ ],
+ 2:[
+  {tip:true, en:"AI tools work with what they can see. Records kept only in chat groups or on paper are invisible to them.", id:"Alat AI hanya bisa bekerja dengan data yang bisa ia baca. Catatan yang hanya ada di grup chat atau kertas tidak terlihat olehnya."},
+  {tip:true, en:"Two-step sign-in is usually a free setting in your email and office software. Switching it on takes only a few minutes per person.", id:"Verifikasi dua langkah biasanya fitur gratis di aplikasi email dan kantor Anda. Mengaktifkannya hanya butuh beberapa menit per orang."}
+ ],
+ 3:[
+  {tip:true, en:"An AI assistant can only find files it is allowed to open. Tidy folders and sensible access rights decide what it can answer, and what it might reveal to the wrong person.", id:"Asisten AI hanya bisa menemukan file yang boleh ia buka. Folder yang rapi dan hak akses yang tepat menentukan apa yang bisa ia jawab, dan apa yang mungkin terlihat oleh orang yang salah."},
+  {tip:true, en:"Tidy data beats more data. Agreeing one way to write customer names and product codes makes reports, and AI, far more reliable.", id:"Data yang rapi lebih berharga daripada data yang banyak. Sepakati satu cara menulis nama pelanggan dan kode produk, maka laporan dan AI jadi jauh lebih andal."}
+ ],
+ 4:[
+  {c:"ID", big:"69%", en:"69% of leaders in Indonesia say they will not hire someone without AI skills.", id:"69% pimpinan di Indonesia mengatakan tidak akan merekrut orang yang tidak punya keterampilan AI.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_ID},
+  {c:"PH", big:"70%", en:"70% of Filipino leaders say they will only hire someone with AI skills, and 68% would pick a less experienced candidate who has them.", id:"70% of Filipino leaders say they will only hire someone with AI skills, and 68% would pick a less experienced candidate who has them.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_PH},
+  {c:"ID", big:"Gratis", en:"The IOE AI Fluency course is free, self-paced and available in Bahasa Indonesia.", id:"Kursus AI Fluency dari IOE gratis, bisa dipelajari kapan saja, dan tersedia dalam Bahasa Indonesia.", src:"IOE learning platform", url:"https://learn.ioe-emp.org/courses/ai-fluency-id/"},
+  {c:"PH", big:"Free", en:"The IOE AI Fluency course is free and self-paced, with lifetime access.", id:"The IOE AI Fluency course is free and self-paced, with lifetime access.", src:"IOE learning platform", url:"https://learn.ioe-emp.org/courses/ai-fluency-en/"}
+ ],
+ 5:[
+  {big:"+34%", en:"In a study of 5,000+ customer support agents, an AI assistant raised issues resolved per hour by 14% on average, and by 34% for new and less experienced staff.", id:"Dalam studi terhadap lebih dari 5.000 agen layanan pelanggan, asisten AI menaikkan jumlah masalah yang diselesaikan per jam rata-rata 14%, dan 34% untuk staf baru atau yang kurang berpengalaman.", src:"Brynjolfsson, Li & Raymond, NBER", url:"https://www.nber.org/papers/w31161"},
+  {big:"+40%", en:"Consultants using AI on tasks it handles well finished 12.2% more tasks, 25% faster, with about 40% higher quality.", id:"Konsultan yang memakai AI untuk tugas yang memang cocok menyelesaikan 12,2% lebih banyak tugas, 25% lebih cepat, dengan kualitas sekitar 40% lebih tinggi.", src:"Harvard & BCG study, via VentureBeat", url:"https://venturebeat.com/ai/enterprise-workers-gain-40-percent-performance-boost-from-gpt-4-harvard-study-finds"},
+  {tip:true, en:"This week, list the three tasks that eat most of your team's time. That list is your first AI shortlist.", id:"Minggu ini, catat tiga pekerjaan yang paling banyak menyita waktu tim Anda. Daftar itu adalah kandidat pertama untuk dibantu AI."}
+ ],
+ 6:[
+  {c:"ID", big:"76%", en:"76% of employees in Indonesia bring their own AI tools to work. Without clear rules, company and customer data can end up in tools nobody approved.", id:"76% karyawan di Indonesia membawa alat AI sendiri ke tempat kerja. Tanpa aturan yang jelas, data perusahaan dan pelanggan bisa masuk ke alat yang tidak pernah disetujui.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_ID},
+  {c:"PH", big:"83%", en:"83% of Filipino AI users bring their own AI tools to work, which creates privacy, security and legal risks for the business.", id:"83% of Filipino AI users bring their own AI tools to work, which creates privacy, security and legal risks for the business.", src:"Microsoft & LinkedIn, Work Trend Index 2024", url:WTI_PH},
+  {en:"In the same Harvard and BCG study, people who used AI for tasks it wasn't good at were more likely to make mistakes, because they trusted it when they shouldn't. That is why a person should check AI output.", id:"Dalam studi Harvard dan BCG yang sama, orang yang memakai AI untuk tugas yang tidak cocok justru lebih sering keliru karena terlalu percaya pada AI. Itulah sebabnya hasil AI perlu dicek manusia.", src:"Harvard & BCG study, via VentureBeat", url:"https://venturebeat.com/ai/enterprise-workers-gain-40-percent-performance-boost-from-gpt-4-harvard-study-finds"},
+  {c:"ID", en:"Indonesia's Personal Data Protection Law (UU 27/2022) covers any business that processes personal data, including customer details typed into AI tools.", id:"UU Pelindungan Data Pribadi (UU 27/2022) berlaku untuk setiap usaha yang memproses data pribadi, termasuk data pelanggan yang dimasukkan ke alat AI.", src:"UU 27/2022", url:"https://id.wikisource.org/wiki/Halaman:UU_Nomor_27_Tahun_2022_Tentang_Perlindungan_Data_Pribadi.pdf/24"},
+  {c:"PH", en:"The National Privacy Commission confirmed in December 2024 that the Data Privacy Act applies to AI systems that process personal data.", id:"The National Privacy Commission confirmed in December 2024 that the Data Privacy Act applies to AI systems that process personal data.", src:"NPC Advisory 2024-04", url:"https://ph.rajahtannasia.com/?p=95783"}
+ ],
+ 7:[
+  {c:"ID", en:"Indonesia's national AI roadmap asks Danantara, the sovereign wealth fund, to design financing instruments for AI, including a proposed Sovereign AI Fund.", id:"Peta jalan AI nasional menugaskan Danantara merancang instrumen pembiayaan AI, termasuk usulan Sovereign AI Fund.", src:"Apolitical, on the National AI Roadmap", url:"https://apolitical.co/en/navigator/case-studies/indonesia-building-a-national-ai-roadmap-through-cross-government-consultation"},
+  {tip:true, en:"A rough cost band is enough here. It helps us match you with training, a partner or financing of the right size.", id:"Perkiraan kisaran biaya sudah cukup. Ini membantu kami mencocokkan Anda dengan pelatihan, mitra, atau pembiayaan yang ukurannya pas."}
+ ],
+ 8:[
+  {tip:true, en:"Your results appear straight away, with free courses picked for your weakest areas.", id:"Hasil Anda langsung muncul, lengkap dengan kursus gratis yang dipilih sesuai bagian yang paling perlu ditingkatkan."}
+ ]
+};
+const tierName = {T1:["Micro","Usaha Mikro"],T2:["Small","Usaha Kecil"],T3:["Medium","Usaha Menengah"],T4:["Upper mid-size","Usaha Menengah Atas"]};
+
+/* ---------- state ---------- */
+const S = {step:0, factIdx:0, country:"ID", lang:"id", form:{}, result:null, cfg:{...DEFAULT_CFG}, rows:[], bench:null, admin:false, uid:null, db:null, downloads:null, user:null};
+try{ const p = JSON.parse(localStorage.getItem("pka-prefs")||"{}"); if(p.country) S.country=p.country; if(p.lang) S.lang=p.lang; }catch(e){}
+if(S.country==="PH") S.lang="en";
+const L = () => S.lang==="id" ? 1 : 0;
+const t = k => { const v=T[k]; return v ? v[L()] : k; };
+const tc = (k) => (S.country==="PH" && T[k+"PH"]) ? T[k+"PH"][L()] : t(k);
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const stmtText = (it) => { if(L()) return it[2]; const en=it[1]; return typeof en==="string"?en:en[S.country]; };
+function toast(msg){ const el=$("#toast"); el.textContent=msg; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,3200); }
+function savePrefs(){ try{ localStorage.setItem("pka-prefs",JSON.stringify({country:S.country,lang:S.lang})); }catch(e){} }
+
+/* ---------- scoring (pure) ---------- */
+function tierOf(n){ n=Number(n)||0; if(n<=9) return "T1"; if(n<=49) return "T2"; if(n<=199) return "T3"; return "T4"; }
+function levelOf(s){ return s<25?1:s<50?2:s<75?3:4; }
+function score(form, cfg){
+  const dims={}; let dk=0; const vals=[];
+  for(const d of DIMS){ let sum=0; for(const it of d.items){ const a=form["q"+it[0]]; if(a==="dk"){dk++; vals.push("dk");} else { sum+=Number(a); vals.push(Number(a)); } } dims[d.id]=sum/16*100; }
+  const total = DIMS.reduce((acc,d)=>acc+d.w*dims[d.id],0);
+  const level = levelOf(total), tier=tierOf(form.staff);
+  const m365biz = ["m365basic","m365std","m365prem"].includes(form.office);
+  const tierN = Number(tier.slice(1));
+  // Imagine Together: firms that need a roadmap first. Level 2 (25-49), or Level 3+ without a plan (D1 below 50); T2 and above.
+  const imagineCrit = (total>=cfg.itMin && total<cfg.scoreMin) || (total>=cfg.scoreMin && dims.D1<50);
+  const imagine = tierN>=2 && imagineCrit;
+  // Up and coming: under 10 full-time staff but scoring like an Imagine Together firm. Flagged, not excluded; Kation decides.
+  const upAndComing = tierN===1 && imagineCrit;
+  const lean = upAndComing && ["s","md","l"].includes(form.size);
+  const adoption = !imagineCrit && total>=cfg.scoreMin && dims.D2>=cfg.d2Min;
+  const routes = {
+    capacity: total<cfg.scoreMin || dims.D2<cfg.capD2,
+    imagineTogether: imagine,
+    upAndComing: upAndComing,
+    adoptionReady: adoption,
+    kation: adoption || imagine || upAndComing,
+    copilotFit: adoption && m365biz && Number(form.daily)>=cfg.copilotUsers,
+    neutralPilot: (adoption || imagine || upAndComing) && !m365biz,
+    facility: form.i1==="yes" && ["audited","unaudited"].includes(form.i4) && form.years && form.years!=="lt2" && form.legal && form.legal!=="sole" && (total>=cfg.scoreMin || dims.D1>=50)
+  };
+  const flags=[]; if(dk>6) flags.push("dk"); if(vals.every(v=>v===vals[0])) flags.push("lowEffort"); if(dims.D6<25) flags.push("d6"); if(lean) flags.push("lean");
+  const order = DIMS.map(d=>d.id).sort((a,b)=>dims[a]-dims[b]);
+  return {dims, total:Math.round(total*10)/10, level, tier, routes, flags, dk, weakest:order.slice(0,2)};
+}
+
+/* ---------- form rendering ---------- */
+function opts(list, sel, ph){ return (ph?`<option value="">${esc(ph)}</option>`:"")+list.map(o=>`<option value="${esc(o[0])}"${sel===o[0]?" selected":""}>${esc(o[1+L()])}</option>`).join(""); }
+function chips(name, list, type="radio"){ const f=S.form; return `<div class="choices">${list.map(o=>{ const on = type==="radio" ? f[name]===o[0] : (f[name]||[]).includes(o[0]); return `<label class="chip"><input type="${type}" name="${name}" value="${esc(o[0])}"${on?" checked":""}> ${esc(o[1+L()])}</label>`; }).join("")}</div>`; }
+const choose = L => L ? "Pilih…" : "Choose…";
+
+function renderAssess(){
+  const f=S.form, ph=S.country==="PH", li=L();
+  const regions = ph ? PH_REG : ID_PROV;
+  let html = `<div class="intro"><h2>${esc(t("introH"))}</h2><p>${esc(t("introP"))}</p></div><div class="form-grid"><div class="rail"><nav aria-label="Sections" style="display:flex;flex-direction:column;gap:.15rem">
+    <button type="button" data-go="0"><span>${esc(t("secProfile"))}</span><span class="num" id="rp-profile"></span></button>
+    <button type="button" data-go="1" class="grp${S.step>=1&&S.step<=6?" open":""}"><span>${esc(t("railDims"))}</span><span class="num" id="rp-dims"></span></button>
+    <div class="sub"${S.step>=1&&S.step<=6?"":" hidden"}>${DIMS.map((d,i)=>`<button type="button" data-go="${i+1}"><span>${d.id} · ${esc(li?d.id_:d.en)}</span><span class="num" id="rp-${d.id}"></span></button>`).join("")}</div>
+    <button type="button" data-go="7"><span>${esc(t("secInvest"))}</span><span class="num"></span></button>
+    <button type="button" data-go="8"><span>${esc(t("secContact"))}</span><span class="num" id="rp-contact"></span></button>
+    <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+  </nav><aside class="fact" id="fact" aria-live="polite"></aside></div>
+  <form id="f" novalidate>
+  <section class="block" id="s-profile" data-step="0"${S.step===0?"":" hidden"}><div class="block-head"><h2>${esc(t("secProfile"))}</h2><p>${esc(t("secProfileP"))}</p></div>
+    <div class="fields">
+      <div class="field"><label for="company">${esc(t("company"))}</label><input type="text" id="company" name="company" value="${esc(f.company)}" autocomplete="organization"></div>
+      <div class="field"><label for="region">${esc(ph?t("regionPH"):t("region"))}</label><select id="region" name="region">${opts(regions.map(r=>[r,r,r]),f.region,choose(li))}</select></div>
+      <div class="field"><label for="sector">${esc(t("sector"))}</label><select id="sector" name="sector">${opts(SECTORS.map(s=>[s[0],s[0]+" · "+s[1],s[0]+" · "+s[2]]),f.sector,choose(li))}</select><span class="hint">${ph?"PSIC section":"Seksi KBLI"}</span></div>
+      <div class="field"><label for="legal">${esc(t("legal"))}</label><select id="legal" name="legal">${opts(ph?OPT.legalPH:OPT.legal,f.legal,choose(li))}</select></div>
+      <div class="field"><label for="years">${esc(t("years"))}</label><select id="years" name="years">${opts(OPT.years,f.years,choose(li))}</select></div>
+      <div class="field"><label for="staff">${esc(t("staff"))}</label><input type="number" id="staff" name="staff" min="1" max="100000" inputmode="numeric" value="${esc(f.staff)}"><span class="hint">${esc(t("staffH"))}</span><span class="hint" id="tierHint"></span></div>
+      <div class="field"><label for="staffC">${esc(t("staffC"))}</label><input type="number" id="staffC" name="staffC" min="0" max="100000" inputmode="numeric" value="${esc(f.staffC)}"><span class="hint">${esc(t("staffCH"))}</span></div>
+      <div class="field"><label for="size">${esc(ph?t("sizePH"):t("size"))}</label><select id="size" name="size">${opts(ph?OPT.sizePH:OPT.sizeID,f.size,choose(li))}</select></div>
+      <div class="field"><label for="daily">${esc(t("daily"))}</label><input type="number" id="daily" name="daily" min="0" max="100000" inputmode="numeric" value="${esc(f.daily)}"></div>
+      <div class="field"><label for="office">${esc(t("office"))}</label><select id="office" name="office">${opts(OPT.office,f.office,choose(li))}</select></div>
+      <div class="field"><label for="pledge">${esc(t("pledge"))}</label><input type="number" id="pledge" name="pledge" min="0" max="100000" inputmode="numeric" value="${esc(f.pledge)}"></div>
+      <div class="field"><span class="lbl">${esc(t("women"))}</span>${chips("women",OPT.ynp)}</div>
+      <div class="field"><span class="lbl">${esc(t("exports"))}</span>${chips("exports",OPT.yn)}</div>
+      <div class="field"><span class="lbl">${esc(tc("member"))}</span>${chips("member",OPT.ynu)}</div>
+      <div class="field"><span class="lbl">${esc(t("role"))}</span>${chips("role",OPT.role)}</div>
+    </div></section>`;
+  for(const d of DIMS){
+    html += `<section class="block" id="s-${d.id}" data-step="${DIMS.indexOf(d)+1}"${S.step===DIMS.indexOf(d)+1?"":" hidden"}><div class="block-head"><div class="dimhead"><h2>${d.id} · ${esc(li?d.id_:d.en)}</h2><span class="num">${esc(t("scoredNote"))} ${Math.round(d.w*100)}%</span></div></div><div>`;
+    for(const it of d.items){
+      const name="q"+it[0], cur=f[name];
+      html += `<div class="stmt"><span class="code">${it[0]}</span><span class="txt" id="t${it[0].replace(".","_")}">${esc(stmtText(it))}</span>
+        <div class="scale" role="radiogroup" aria-labelledby="t${it[0].replace(".","_")}">
+        ${SCALE.map((s,i)=>`<label><input type="radio" name="${name}" value="${i}"${String(cur)===String(i)?" checked":""}><b>${i}</b><span>${esc(s[li])}</span></label>`).join("")}
+        <label class="dk"><input type="radio" name="${name}" value="dk"${cur==="dk"?" checked":""}><span style="display:inline">${esc(t("dk"))}</span></label>
+        </div></div>`;
+    }
+    html += `</div></section>`;
+  }
+  html += `<section class="block" id="s-invest" data-step="7"${S.step===7?"":" hidden"}><div class="block-head"><h2>${esc(t("secInvest"))}</h2><p>${esc(t("secInvestP"))}</p></div>
+    <div class="fields">
+      <div class="field wide"><span class="lbl">I1 · ${esc(t("i1"))}</span>${chips("i1",OPT.yn)}</div>
+      <div class="field wide" id="i1dWrap"${f.i1==="yes"?"":" hidden"}><label for="i1d">${esc(t("i1d"))}</label><input type="text" id="i1d" name="i1d" maxlength="200" value="${esc(f.i1d)}"></div>
+      <div class="field"><label for="i2">I2 · ${esc(t("i2"))}</label><select id="i2" name="i2">${opts(OPT.cost,f.i2,choose(li))}</select></div>
+      <div class="field"><label for="i3">I3 · ${esc(t("i3"))}</label><select id="i3" name="i3">${opts(OPT.fund,f.i3,choose(li))}</select></div>
+      <div class="field"><label for="i4">I4 · ${esc(t("i4"))}</label><select id="i4" name="i4">${opts(OPT.records,f.i4,choose(li))}</select></div>
+      <div class="field"><span class="lbl">I5 · ${esc(t("i5"))}</span>${chips("i5",OPT.yn)}</div>
+      <div class="field wide"><span class="lbl">I6 · ${esc(t("i6"))}</span>${chips("i6",OPT.support,"checkbox")}</div>
+    </div></section>
+  <section class="block" id="s-contact" data-step="8"${S.step===8?"":" hidden"}><div class="block-head"><h2>${esc(t("secContact"))}</h2><p>${esc(t("secContactP"))}</p></div>
+    <div class="fields">
+      <div class="field"><label for="cname">${esc(t("cname"))}</label><input type="text" id="cname" name="cname" value="${esc(f.cname)}" autocomplete="name"></div>
+      <div class="field"><label for="cemail">${esc(t("cemail"))}</label><input type="email" id="cemail" name="cemail" value="${esc(f.cemail)}" autocomplete="email"></div>
+      <div class="field"><label for="cphone">${esc(tc("cphone"))}</label><input type="tel" id="cphone" name="cphone" value="${esc(f.cphone)}" autocomplete="tel"></div>
+    </div>
+    <div class="consent">
+      <label><input type="checkbox" name="agree" id="agree"${S.form.agree?" checked":""}><span class="box">✓</span><span>${esc(tc("agree"))}<small>${esc(t("agreeS"))}</small></span></label>
+    </div>
+    <label class="chip" style="align-self:flex-start"><input type="checkbox" name="test" id="test"${f.test!==false?" checked":""}> ${esc(t("test"))}</label>
+  </section>
+  <p class="err" id="formErr" hidden></p>
+  <div class="stepnav">
+    <button type="button" class="btn" id="backBtn"${S.step===0?" hidden":""}>${esc(t("back"))}</button>
+    <button type="button" class="btn navy" id="nextBtn"${S.step===8?" hidden":""}>${esc(t("nextStep"))}</button>
+    <button type="submit" class="btn primary" id="submitBtn"${S.step===8?"":" hidden"}>${esc(t("submit"))}</button>
+    <button type="button" class="btn" id="exampleBtn"${S.step===0||S.step===8?"":" hidden"}>${esc(t("example"))}</button>
+    <span class="count num">${esc(t("stepOf").replace("{n}",S.step+1))}</span>
+  </div>
+  <aside class="fact" id="factMobile" aria-live="polite"></aside>
+  </form></div>`;
+  $("#viewAssess").innerHTML = html;
+  bindForm(); updateProgress();
+}
+function consentBox(k, text, sub){ return `<label><input type="checkbox" name="box${k}" id="box${k}"${S.form["box"+k]?" checked":""}><span class="box">${k}</span><span>${esc(text)}<small>${esc(sub)}</small></span></label>`; }
+
+function readForm(){
+  const fd = new FormData($("#f")); const f={};
+  for(const [k,v] of fd.entries()){ if(k==="i6"){ (f.i6=f.i6||[]).push(v); } else f[k]=v; }
+  f.agree = fd.has("agree"); f.test = fd.has("test");
+  if(!f.i6) f.i6=[];
+  return f;
+}
+function bindForm(){
+  const form=$("#f");
+  form.addEventListener("input",()=>{ S.form=readForm(); $("#i1dWrap").hidden = S.form.i1!=="yes"; updateProgress(); });
+  form.addEventListener("change",()=>{ S.form=readForm(); $("#i1dWrap").hidden = S.form.i1!=="yes"; updateProgress(); });
+  form.addEventListener("submit",e=>{ e.preventDefault(); submit(); });
+  $("#exampleBtn").addEventListener("click",fillExample);
+  $("#backBtn").addEventListener("click",()=>goStep(S.step-1));
+  $("#nextBtn").addEventListener("click",()=>goStep(S.step+1));
+  document.querySelectorAll(".rail [data-go]").forEach(b=>b.addEventListener("click",()=>goStep(Number(b.dataset.go))));
+  renderFact();
+}
+function goStep(n){
+  S.form=readForm(); S.step=Math.max(0,Math.min(8,n)); S.factIdx=0; renderAssess();
+  const top=$("#viewAssess").getBoundingClientRect().top+window.scrollY-130; window.scrollTo({top:Math.max(0,top),behavior:"smooth"});
+}
+function factsFor(step){
+  const c=S.country, all=FACTS[step]||[]; return all.filter(x=>!x.c||x.c===c);
+}
+function renderFact(){
+  const list=factsFor(S.step); if(!list.length) return;
+  const i=S.factIdx%list.length, x=list[i], li=L();
+  const html=`<span class="fk">${esc(x.tip?t("tipKey"):t("factKey"))}</span>${x.big?`<span class="fb num">${esc(x.big)}</span>`:""}<p>${esc(li?x.id:x.en)}</p>${x.src?(x.url?`<a href="${x.url}" target="_blank" rel="noopener">${esc(x.src)}</a>`:`<span class="src">${esc(x.src)}</span>`):""}${list.length>1?`<div class="fact-dots">${list.map((_,k)=>`<button type="button" aria-label="${k+1}" data-fact="${k}" aria-current="${k===i}"></button>`).join("")}</div>`:""}`;
+  for(const id of ["#fact","#factMobile"]){ const el=$(id); if(el){ el.innerHTML=html; el.querySelectorAll("[data-fact]").forEach(b=>b.onclick=()=>{S.factIdx=Number(b.dataset.fact); renderFact();}); } }
+}
+function updateProgress(){
+  const f=S.form; let done=0, total=0;
+  const prof = ["region","sector","legal","years","staff","size","daily","office"]; const pd=prof.filter(k=>f[k]).length;
+  const rp=$("#rp-profile"); if(rp){ rp.textContent=`${pd}/${prof.length}`; rp.parentElement.classList.toggle("done",pd===prof.length); }
+  done+=pd; total+=prof.length;
+  for(const d of DIMS){ const n=d.items.filter(it=>f["q"+it[0]]!==undefined).length; const el=$("#rp-"+d.id); if(el){ el.textContent=`${n}/4`; el.parentElement.classList.toggle("done",n===4);} done+=n; total+=4; }
+  const rc=$("#rp-contact"); if(rc){ rc.textContent=f.agree?"✓":""; rc.parentElement.classList.toggle("done",!!f.agree); }
+  document.querySelectorAll(".rail [data-go]").forEach(b=>b.classList.toggle("cur",!b.classList.contains("grp") && Number(b.dataset.go)===S.step));
+  const dn=DIMS.reduce((a,d)=>a+d.items.filter(it=>f["q"+it[0]]!==undefined).length,0); const rd=$("#rp-dims"); if(rd){ rd.textContent=`${dn}/24`; rd.parentElement.classList.toggle("done",dn===24); }
+  const p=$("#prog"); if(p) p.style.width = Math.round(done/total*100)+"%";
+  const th=$("#tierHint"); if(th) th.textContent = f.staff ? `${tierOf(f.staff)} · ${tierName[tierOf(f.staff)][L()]}` : "";
+}
+function fillExample(){
+  // Worked example from the framework (section 5): 60-person Indonesian distributor, score 42.8
+  const ex = {D1:[2,1,2,1],D2:[3,3,2,2],D3:[2,1,2,1],D4:[3,2,0,2],D5:[2,1,3,1],D6:[1,0,2,1]};
+  const f = {...S.form, company:(L()?"Contoh: ":"Example: ")+"PT Distribusi Contoh", region:S.country==="PH"?"IV-A – CALABARZON":"Jawa Timur", sector:"G", legal:"corp", years:"6-10", staff:"60", staffC:"12", size:"s", daily:"30", office:"m365std", pledge:"8", women:"no", exports:"no", member:"yes", role:"director", i1:"no", i6:["training"], agree:true, cname:"Contoh / Example", cemail:"contoh@example.com", test:true};
+  for(const d of DIMS) d.items.forEach((it,i)=>f["q"+it[0]]=String(ex[d.id][i]));
+  S.form=f; S.step=8; renderAssess(); toast(L()?"Contoh jawaban sudah diisi. Ini hanya contoh, bukan data Anda.":"Example answers loaded. These are not your data.");
+}
+
+/* ---------- submit ---------- */
+let submitBusy = false;
+
+async function submit(){
+  if (submitBusy) return;
+
+  const f=readForm(); S.form=f;
+  const missing = DIMS.flatMap(d=>d.items.map(it=>it[0])).filter(c=>f["q"+c]===undefined);
+  if(missing.length || !f.agree){ if(missing.length){ const st=Number(missing[0][0]); if(S.step!==st){ goStep(st); } } const err=$("#formErr"); err.textContent = `${t("missing")} ${missing.join(", ")}${f.agree?"":(missing.length?", ":"")+(L()?"persetujuan":"agreement")}`; err.hidden=false; return; }
+  if(!f.staff || Number(f.staff)<1){ if(S.step!==0) goStep(0); const err=$("#formErr"); err.textContent=t("needStaff"); err.hidden=false; return; }
+  if(!f.cname || !f.cemail){ const err=$("#formErr"); err.textContent=t("needContact"); err.hidden=false; return; }
+  $("#formErr").hidden = true;
+
+submitBusy = true;
+
+const submitBtn = $("#submitBtn");
+const originalBtnHtml = submitBtn.innerHTML;
+
+submitBtn.disabled = true;
+submitBtn.setAttribute("aria-busy", "true");
+
+submitBtn.innerHTML = `
+  <span class="btn-loading">
+    <span class="btn-spinner" aria-hidden="true"></span>
+    <span>${L() ? "Menyimpan jawaban..." : "Saving answers..."}</span>
+  </span>
+`;
+
+const r = score(f, S.cfg);
+S.result = r;
+  let saveState="none";
+  {
+    const doc = {
+      v:1, submittedAt:new Date().toISOString(), country:S.country, lang:S.lang, test:!!f.test,
+      profile:{company:f.company||"", region:f.region||"", sector:f.sector||"", legal:f.legal||"", years:f.years||"", staff:Number(f.staff)||0, staffC:Number(f.staffC)||0, size:f.size||"", daily:Number(f.daily)||0, office:f.office||"", pledge:Number(f.pledge)||0, women:f.women||"", exports:f.exports||"", member:f.member||"", role:f.role||""},
+      answers:Object.fromEntries(DIMS.flatMap(d=>d.items.map(it=>[it[0].replace(".","_"), f["q"+it[0]]==="dk"?"dk":Number(f["q"+it[0]])]))),
+      invest:{i1:f.i1||"", i1d:f.i1d||"", i2:f.i2||"", i3:f.i3||"", i4:f.i4||"", i5:f.i5||"", i6:f.i6||[]},
+      contact:{name:f.cname||"", email:f.cemail||"", phone:f.cphone||""},
+      consent:{agreed:!!f.agree, text:"v2-2026-10-10 single agreement", lang:S.lang},
+      scores:{dims:Object.fromEntries(Object.entries(r.dims).map(([k,v])=>[k,Math.round(v*10)/10])), total:r.total, level:r.level, tier:r.tier, dk:r.dk},
+      routes:r.routes, flags:r.flags, review:{status:"pending"}
+    };
+    // Gunakan ID yang sama hanya untuk retry submission gagal.
+const submissionId = S.lastId || newId();
+S.lastId = submissionId;
+
+console.log("[ASSESSMENT] Submitting", {
+  id: submissionId,
+  country: doc.country,
+  score: doc.scores.total,
+  answerCount: Object.keys(doc.answers).length
+});
+
+try {
+  const response = await Store.save(submissionId, doc);
+
+  console.log("[ASSESSMENT] Save success:", response);
+
+  saveState = f.test ? "test" : "saved";
+
+  // Submit berikutnya harus menggunakan ID baru.
+  S.lastId = null;
+
+  // Jangan sampai refreshRows mengganggu status submit.
+  refreshRows().catch(error => {
+    console.error("[ASSESSMENT] Refresh failed:", error);
+  });
+
+} catch (error) {
+  console.error("[ASSESSMENT] Save failed:", error);
+
+  saveState = "failed";
+
+  // Pertahankan ID untuk retry agar tidak membuat duplikat.
+  S.lastId = submissionId;
+
+} finally {
+  submitBusy = false;
+
+  submitBtn.disabled = false;
+  submitBtn.removeAttribute("aria-busy");
+  submitBtn.innerHTML = originalBtnHtml;
+}
+  }
+
+  renderResult(saveState);
+  show("result");
+}
+
+/* ---------- result ---------- */
+function renderResult(saveState){
+  const r=S.result, f=S.form, li=L(), lv=LEVELS[r.level-1], ph=S.country==="PH";
+  const bcell = S.bench && S.bench.cells ? S.bench.cells[S.country+"_"+r.tier] : null;
+  const dimName = id => { const d=DIMS.find(x=>x.id===id); return li?d.id_:d.en; };
+  const courses=[];
+  if(r.dims.D4<50 || r.level===1){ courses.push({href: ph||!li ? (ph?COURSES.fluencyEN:COURSES.fluencyID) : COURSES.fluencyID, t: li?"AI Fluency (Bahasa Indonesia), seluruh kursus":(ph?"AI Fluency, whole course":"AI Fluency in Bahasa Indonesia, whole course"), why:dimName("D4")}); }
+  if(r.dims.D1<50 || r.dims.D5<50){ courses.push({href:COURSES.smes, t: li?"AI for SMEs, Modul 1: peluang, nilai bisnis, perluasan AI (bahasa Inggris)":"AI for SMEs, Module 1: opportunities, business value, scaling AI", why:`${dimName("D1")} / ${dimName("D5")}`}); }
+  if(r.dims.D6<50){ courses.push({href:COURSES.smes, t: li?"AI for SMEs, Modul 2: hukum ketenagakerjaan, transparansi, privasi data (bahasa Inggris)":"AI for SMEs, Module 2: labour law, transparency, data privacy", why:dimName("D6")}); }
+  if(!courses.length) courses.push({href:COURSES.smes, t: li?"AI for SMEs, kedua modul dan kuis akhir (bahasa Inggris)":"AI for SMEs, both modules and the final quiz", why: li?"Sertifikat penuh":"Full certificate"});
+  const routes=[];
+  if(r.routes.capacity) routes.push(["accent",tc("routeCap"),t("routeCapD")]);
+  if(r.routes.imagineTogether) routes.push(["good",t("routeIT"),t("routeITD")+" "+t("routeKD")+(r.routes.neutralPilot?" "+t("routeITneutral"):"")]);
+  if(r.routes.upAndComing) routes.push(["good",t("routeUC"),t("routeUCD")+" "+t("routeKD")+(r.routes.neutralPilot?" "+t("routeITneutral"):"")]);
+  if(r.routes.adoptionReady) routes.push(["good",t("routeK"),t("routeKD")]);
+  if(r.routes.copilotFit) routes.push(["good",t("routeCF"),""]);
+  if(r.routes.neutralPilot && !r.routes.imagineTogether && !r.routes.upAndComing) routes.push(["good",t("routePilot"),""]);
+  if(r.routes.facility) routes.push(["good",t("routeF"),t("routeFD")]);
+  const saveMsg = saveState==="saved"?["good",t("saved")]:saveState==="test"?["neutral",t("savedTest")]:saveState==="failed"||saveState==="none"?["warn",t("notSaved")]:null;
+  $("#viewResult").innerHTML = `
+    <div class="actions" style="margin-bottom:1rem">${saveMsg?`<span class="pill ${saveMsg[0]}">${esc(saveMsg[1])}</span>`:""}</div>
+    <div class="score-card">
+      <div class="dial"><span class="eyebrow">${esc(t("resTitle"))}${f.company?" · "+esc(f.company):""}</span>
+        <div class="big num">${r.total.toFixed(1)}<small>${t("outOf")}</small></div>
+        <span class="level">${esc(t("level"))} ${lv.n} · ${esc(li?lv.id:lv.en)}</span>
+        <div class="ladder" aria-hidden="true">${[1,2,3,4].map(n=>`<i class="${n<=r.level?"on":""}"></i>`).join("")}</div>
+        <p class="note">${r.tier} · ${esc(tierName[r.tier][li])}</p>
+        <p>${esc(li?lv.recId:lv.recEn)}</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.8rem;min-width:0"><h3>${esc(t("dims"))}</h3>
+        <div class="bars">${DIMS.map(d=>{ const v=r.dims[d.id]; const weak=r.weakest.includes(d.id); const bv=bcell?bcell.dims[d.id]:null; return `<div class="bar"><span class="t">${d.id} · ${esc(li?d.id_:d.en)}</span><span class="track" role="img" aria-label="${v.toFixed(1)} of 100"><i class="${weak?"weak":""}" style="width:${v}%"></i>${bv!==null?`<span class="bm" style="left:calc(${bv}% - 1px)" title="${bv}"></span>`:""}<span class="tick" style="left:25%"></span><span class="tick" style="left:50%"></span><span class="tick" style="left:75%"></span></span><span class="v num">${v.toFixed(1)}</span></div>`; }).join("")}</div>
+        <p class="note">${bcell?esc(t("benchLine").replace("{m}",bcell.mean.toFixed(1)).replace("{n}",bcell.n)):esc(t("pct"))}</p>
+      </div>
+    </div>
+    <div class="res-grid">
+      <div class="panel"><h3>${esc(t("focus"))}</h3><ul>${r.weakest.map(id=>`<li><b>${esc(dimName(id))}</b> <span class="num">${r.dims[id].toFixed(1)}</span></li>`).join("")}</ul>
+        ${r.flags.includes("d6")?`<p class="note">${esc(t("d6Flag"))}</p>`:""}${r.flags.includes("dk")?`<p class="note">${esc(t("dkFlag"))}</p>`:""}</div>
+      <div class="panel"><h3>${esc(t("courses"))}</h3><ul>${courses.map(c=>`<li><a href="${c.href}" target="_blank" rel="noopener">${esc(c.t)}</a><br><span class="note">${esc(c.why)}</span></li>`).join("")}</ul></div>
+      <div class="panel" style="grid-column:1/-1"><h3>${esc(t("next"))}</h3>
+        ${routes.map(x=>`<div class="route"><span class="pill ${x[0]}">●</span><div><b>${esc(x[1])}</b>${x[2]?`<br><span class="note">${esc(x[2])}</span>`:""}</div></div>`).join("")}
+        <p class="note">${esc(t("pending"))}</p></div>
+    </div>
+    <div class="actions" style="margin-top:1.25rem"><button class="btn navy" id="editBtn" type="button">${esc(t("edit"))}</button><button class="btn" id="newBtn" type="button">${esc(t("restart"))}</button></div>`;
+  $("#editBtn").onclick=()=>{ show("assess"); renderAssess(); };
+  $("#newBtn").onclick=()=>{ S.form={}; S.result=null; S.step=0; S.lastId=null; show("assess"); renderAssess(); window.scrollTo(0,0); };
+  window.scrollTo(0,0);
+}
+
+/* ---------- staff: program view ---------- */
+const HOLD_REASONS=["Duplicate entry","Looks fake or test","APINDO / ECOP to call first","Not a fit for the route","Other"];
+function reviewCell(r){
+  const st=r.review?.status||"pending", reason=r.review?.reason||"";
+  const pill = st==="confirmed"?'<span class="pill good">confirmed</span>': st==="hold"?`<span class="pill warn">on hold: ${esc(reason)}</span>`:'<span class="pill neutral">awaiting review</span>';
+  const val = st==="hold"?reason:st;
+  return `${pill}<br><select class="btn small" style="margin-top:.3rem" data-review="${esc(r._id)}" aria-label="Review decision">
+    <option value="pending"${val==="pending"?" selected":""}>Awaiting review</option>
+    <option value="confirmed"${val==="confirmed"?" selected":""}>Confirm routes</option>
+    ${HOLD_REASONS.map(h=>`<option value="${esc(h)}"${val===h?" selected":""}>Hold: ${esc(h)}</option>`).join("")}
+  </select>`;
+}
+const PARTNER_ROUTES={kation:"Kation",imagineTogether:"Kation",upAndComing:"Kation",copilotFit:"Kation",facility:"Facility"};
+function partnerFilter(){ return PARTNER_ROUTES[PF.route]||""; }
+function reviewCounts(rows){ const c={c:0,p:0,h:0}; rows.forEach(r=>{ const s=r.review?.status; if(s==="confirmed")c.c++; else if(s==="hold")c.h++; else c.p++; }); return c; }
+const ROUTE_LABEL = {capacity:"Capacity",imagineTogether:"Imagine Together",upAndComing:"Up and coming",kation:"Kation (all)",copilotFit:"Copilot-fit",neutralPilot:"AI in 30",facility:"Facility"};
+let PF = {route:"all", country:"all", tests:true};
+function filteredRows(){
+  return S.rows.filter(r=> (PF.tests || !r.test) && (PF.country==="all"||r.country===PF.country) && (PF.route==="all" || (r.routes&&r.routes[PF.route])));
+}
+function renderProgram(){
+  if(!S.admin){ $("#viewProgram").innerHTML=`<div class="gate">${esc(t("staffOnly"))}</div>`; return; }
+  const rows=filteredRows().sort((a,b)=>String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  const all=S.rows.filter(r=>PF.tests||!r.test);
+  const pend=all.filter(r=>(!r.review||r.review.status==="pending") && (r.routes?.kation||r.routes?.facility)).length;
+  const rc=reviewCounts(rows);
+  const pledges=all.reduce((a,r)=>a+(r.profile?.pledge||0),0);
+  const c=S.cfg;
+  $("#viewProgram").innerHTML = `${dummyPanel()}
+    <div class="kpis">
+      <div class="kpi"><b class="num">${all.length}</b><span>Responses</span></div>
+      <div class="kpi"><b class="num">${all.length?(all.reduce((a,r)=>a+r.scores.total,0)/all.length).toFixed(1):"–"}</b><span>Mean readiness score</span></div>
+      <div class="kpi"><b class="num">${pledges.toLocaleString("en")}</b><span>Learners pledged (P15) of 25,000</span></div>
+      <div class="kpi"><b class="num">${pend}</b><span>Referrals awaiting review</span></div>
+    </div>
+    <details class="box"><summary>Routing thresholds (v1)</summary>
+      <p class="note" style="margin:.5rem 0">Changes apply to new submissions. Stored scores and routes are not recalculated.</p>
+      <div class="cfg">
+        <div class="field"><label for="cfgIT">Imagine Together score minimum</label><input id="cfgIT" type="number" value="${c.itMin}"></div>
+        <div class="field"><label for="cfgScore">Adoption score minimum</label><input id="cfgScore" type="number" value="${c.scoreMin}"></div>
+        <div class="field"><label for="cfgD2">D2 minimum for adoption</label><input id="cfgD2" type="number" value="${c.d2Min}"></div>
+        <div class="field"><label for="cfgCap">D2 below this → capacity</label><input id="cfgCap" type="number" value="${c.capD2}"></div>
+        <div class="field"><label for="cfgUsers">Copilot-fit daily users</label><input id="cfgUsers" type="number" value="${c.copilotUsers}"></div>
+      </div><div class="actions" style="margin-top:.7rem"><button class="btn small" id="cfgSave" type="button">Save thresholds</button></div>
+    </details>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Route">${["all","capacity","imagineTogether","upAndComing","kation","copilotFit","neutralPilot","facility"].map(k=>`<button type="button" data-route="${k}" aria-pressed="${PF.route===k}">${k==="all"?"All":ROUTE_LABEL[k]}</button>`).join("")}</div>
+      <select id="pfCountry" aria-label="Country"><option value="all">Both countries</option><option value="ID"${PF.country==="ID"?" selected":""}>Indonesia</option><option value="PH"${PF.country==="PH"?" selected":""}>Philippines</option></select>
+      <label class="chip"><input type="checkbox" id="pfTests"${PF.tests?" checked":""}> Include test entries</label>
+      <button class="btn small" id="exportBtn" type="button">Export CSV</button><button class="btn small" id="refreshBtn" type="button">Refresh</button><span class="note">Storage: ${Store.mode==="shared"?"shared (Google Sheet)":"this browser only (demo mode)"}</span>
+    </div>
+    <p class="note" style="margin-bottom:.6rem">${partnerFilter()?`${partnerFilter()} export includes confirmed firms only: <b>${rc.c}</b> confirmed · <b>${rc.p}</b> awaiting review · <b>${rc.h}</b> on hold.`:"Choose a Kation or Facility filter to export a partner list. Only confirmed firms are included in partner exports."}</p>
+    <div class="tablebox">${rows.length?`<table><thead><tr><th>Submitted</th><th>Company</th><th>Ctry</th><th>Tier</th><th class="r">FT / contract</th><th class="r">Score</th><th>Level</th><th>Routes</th><th>Contact</th><th>Flags</th><th class="r">Pledge</th><th>Review</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="num">${esc(String(r.submittedAt).slice(0,10))}</td><td>${esc(r.profile?.company||"—")}${r.dummy?' <span class="pill warn">dummy</span>':r.test?' <span class="pill neutral">test</span>':""}</td><td>${esc(r.country)}</td><td>${esc(r.scores.tier)}</td><td class="r num">${r.profile?.staff||0} / ${r.profile?.staffC||0}</td><td class="r num">${r.scores.total.toFixed(1)}</td><td><span class="pill ${["crit","warn","accent","good"][r.scores.level-1]}">L${r.scores.level}</span></td>
+      <td>${Object.keys(ROUTE_LABEL).filter(k=>r.routes?.[k]).map(k=>`<span class="pill neutral">${ROUTE_LABEL[k]}</span>`).join(" ")}</td>
+      <td>${esc(r.contact?.email||"—")}</td><td>${(r.flags||[]).map(x=>`<span class="pill warn">${x==="dk"?"don't know":x==="lowEffort"?"low effort":x==="lean"?"lean: high turnover per staff":"D6 low"}</span>`).join(" ")}</td>
+      <td class="r num">${r.profile?.pledge||0}</td>
+      <td>${(r.routes?.kation||r.routes?.facility)?reviewCell(r):'<span class="pill neutral">n/a</span>'}</td></tr>`).join("")}
+    </tbody></table>`:`<div class="empty">No responses yet. Submissions from the Assessment tab appear here live; use the example answers to create a test entry.</div>`}</div>`;
+  $("#viewProgram").querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>{PF.route=b.dataset.route; renderProgram();});
+  $("#pfCountry").onchange=e=>{PF.country=e.target.value; renderProgram();};
+  $("#pfTests").onchange=e=>{PF.tests=e.target.checked; renderProgram(); renderIndex();};
+  $("#viewProgram").querySelectorAll("[data-review]").forEach(sel=>sel.onchange=async()=>{ const v=sel.value; const review = v==="pending"?{status:"pending"}: v==="confirmed"?{status:"confirmed",at:new Date().toISOString()}:{status:"hold",reason:v,at:new Date().toISOString()};
+    sel.disabled=true; try{ await Store.confirm(sel.dataset.review,review); toast(v==="confirmed"?"Routes confirmed":v==="pending"?"Set back to awaiting review":"Put on hold"); refreshRows(); }catch(e){ sel.disabled=false; toast("Could not save the review. Please try again."); } });
+  $("#cfgSave").onclick=async()=>{ const n=id=>Number($(id).value); const cfg={...S.cfg, itMin:n("#cfgIT"), scoreMin:n("#cfgScore"), d2Min:n("#cfgD2"), capD2:n("#cfgCap"), copilotUsers:n("#cfgUsers")}; try{ await Store.setConfig(cfg); S.cfg={...DEFAULT_CFG,...cfg}; toast("Thresholds saved"); renderProgram(); }catch(e){ toast("Could not save thresholds."); } };
+  const ex=$("#exportBtn"); if(ex) ex.onclick=exportCsv; const rf=$("#refreshBtn"); if(rf) rf.onclick=refreshRows; bindDummy($("#viewProgram"));
+}
+async function exportCsv(){
+  let rows=filteredRows();
+  if(partnerFilter()){ rows=rows.filter(r=>r.review?.status==="confirmed"); if(!rows.length){ toast("No confirmed firms on this filter yet. Confirm routes first."); return; } }
+  const head=["submitted","company","country","region","sector","tier","staff_fulltime","staff_contract","daily_users","office","score","level","D1","D2","D3","D4","D5","D6","routes","pledge","review","hold_reason","contact_name","contact_email","contact_phone","project","cost_band"];
+  const q=v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
+  const lines=[head.join(",")].concat(rows.map(r=>{
+    const base=[r.submittedAt,r.profile?.company,r.country,r.profile?.region,r.profile?.sector,r.scores.tier,r.profile?.staff,r.profile?.staffC,r.profile?.daily,r.profile?.office,r.scores.total,r.scores.level,...DIMS.map(d=>r.scores.dims[d.id]),Object.keys(ROUTE_LABEL).filter(k=>r.routes?.[k]).join(" "),r.profile?.pledge,r.review?.status||"pending",r.review?.reason||"",r.contact?.name,r.contact?.email,r.contact?.phone,r.invest?.i1d,r.invest?.i2];
+    return base.map(q).join(","); }));
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=`readiness-${PF.route}-${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+}
+
+/* ---------- staff: index view ---------- */
+function renderIndex(){
+  if(!S.admin){ $("#viewIndex").innerHTML=`<div class="gate">${esc(t("staffOnly"))}</div>`; return; }
+  const rows=S.rows.filter(r=>(PF.tests||!r.test) && !(r.flags||[]).includes("lowEffort"));
+  const c=S.cfg; const cells=[];
+  for(const ct of ["ID","PH"]) for(const tr of ["T1","T2","T3","T4"]){ const g=rows.filter(r=>r.country===ct&&r.scores.tier===tr); cells.push({ct,tr,g}); }
+  const dimMean = g => DIMS.map(d=> g.length? g.reduce((a,r)=>a+r.scores.dims[d.id],0)/g.length : null);
+  const status = n => n>=c.publishMin?['good','publishable']:n>=c.internalMin?['warn','internal only']:['neutral','suppressed'];
+  $("#viewIndex").innerHTML = `${dummyPanel()}
+    <div class="block-head" style="margin-bottom:1rem"><h2>Nusanova AI Readiness Index · Participant Edition</h2>
+    <p>Mean readiness score of verified responses by country and tier. Cells with ${c.publishMin}+ responses can be published; ${c.internalMin}–${c.publishMin-1} are for partners only; fewer are hidden. Low-effort responses are excluded${PF.tests?"; test entries are currently included":""}.</p></div>
+    <div class="legend" style="margin-bottom:.6rem"><span><i class="l1"></i>L1 Getting started</span><span><i class="l2"></i>L2 Building foundations</span><span><i class="l3"></i>L3 Putting AI to work</span><span><i class="l4"></i>L4 Ready to scale</span></div>
+    <div class="tablebox"><table><thead><tr><th>Country</th><th>Tier</th><th class="r">n</th><th>Status</th><th class="r">Mean score</th><th>Level mix</th>${DIMS.map(d=>`<th class="r">${d.id}</th>`).join("")}</tr></thead><tbody>
+    ${cells.map(({ct,tr,g})=>{ const n=g.length, st=status(n), show=n>=c.internalMin; const dm=dimMean(g); const mix=[1,2,3,4].map(l=>g.filter(r=>r.scores.level===l).length);
+      return `<tr><td>${ct==="ID"?"Indonesia":"Philippines"}</td><td>${tr} · ${tierName[tr][0]}</td><td class="r num">${n}</td><td><span class="pill ${st[0]}">${st[1]}</span></td>
+      <td class="r num">${show?(g.reduce((a,r)=>a+r.scores.total,0)/n).toFixed(1):"—"}</td>
+      <td>${show?`<span class="stack" role="img" aria-label="Levels: ${mix.join(", ")}">${mix.map((m,i)=>m?`<i class="l${i+1}" style="width:${m/n*100}%"></i>`:"").join("")}</span>`:"—"}</td>
+      ${dm.map(v=>`<td class="r num">${show&&v!==null?v.toFixed(0):"—"}</td>`).join("")}</tr>`; }).join("")}
+    </tbody></table></div>
+    <p class="note" style="margin-top:.8rem">Participants come mostly through employer-association networks and opt in, so these figures describe program participants, not all SMEs. A national edition needs a quota sample.</p>
+    ${renderInsights(rows)}
+    <div class="panel" style="margin-top:1rem"><h3>Benchmark shown to participants</h3>
+      <p class="note">Participants never see other firms' answers. When you publish, only country × tier averages from cells with ${c.publishMin}+ responses are copied to a public summary, which participants' results pages compare against.${CONFIG.reviewMode?" Review mode: test and dummy entries are included when \"Include test entries\" is ticked in the Program view.":" Test entries are always excluded."}</p>
+      <p class="note">${S.bench?`Last published ${esc(String(S.bench.updatedAt).slice(0,16).replace("T"," "))} · ${Object.keys(S.bench.cells||{}).length} cell(s)`:"Not published yet."}</p>
+      <div class="actions"><button class="btn small navy" id="pubBench" type="button">Publish benchmark now</button></div>
+    </div>`;
+  const pb=$("#pubBench"); if(pb) pb.onclick=publishBench; bindDummy($("#viewIndex"));
+}
+function moe(n){ return n? 1.96*Math.sqrt(.25/n)*100 : null; }
+function sd(a){ if(a.length<2) return 0; const m=a.reduce((x,y)=>x+y,0)/a.length; return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1)); }
+function pct(a,b){ return b? Math.round(a/b*100) : 0; }
+function renderInsights(rows){
+  const n=rows.length; if(!n) return `<div class="empty">Insights appear here once responses come in.</div>`;
+  const scores=rows.map(r=>r.scores.total), m=scores.reduce((a,b)=>a+b,0)/n, s1=sd(scores);
+  const byC = ct => rows.filter(r=>r.country===ct);
+  const weakest = {}; rows.forEach(r=>{ const d=Object.entries(r.scores.dims).sort((a,b)=>a[1]-b[1])[0][0]; weakest[d]=(weakest[d]||0)+1; });
+  const topWeak = Object.entries(weakest).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const dimM = DIMS.map(d=>[d.id,d.en,rows.reduce((a,r)=>a+r.scores.dims[d.id],0)/n]);
+  const noRules = rows.filter(r=>{ const v=r.answers?.["6_2"]; return v===0||v===1||v==="dk"; }).length;
+  const pledges = rows.reduce((a,r)=>a+(r.profile?.pledge||0),0);
+  const route = k => rows.filter(r=>r.routes?.[k]).length;
+  const m365 = rows.filter(r=>["m365basic","m365std","m365prem","m365other"].includes(r.profile?.office)).length;
+  const gws = rows.filter(r=>r.profile?.office==="gws").length;
+  const proj = rows.filter(r=>r.invest?.i1==="yes"); const weakBooks = proj.filter(r=>["books","none"].includes(r.invest?.i4)).length;
+  const costBands = OPT.cost.map(o=>[o[1], proj.filter(r=>r.invest?.i2===o[0]).length]).filter(x=>x[1]);
+  const w = rows.filter(r=>r.profile?.women==="yes"), nw = rows.filter(r=>r.profile?.women==="no");
+  const mean = g => g.length? g.reduce((a,r)=>a+r.scores.total,0)/g.length : 0;
+  const capShare = pct(route("capacity"),n);
+  const calib = capShare>70?["warn","Over 70% land in capacity building: the 50-point threshold may be too high for this population, or readiness is lower than assumed."]:capShare<20?["warn","Under 20% land in capacity building: check whether the threshold is too low."]:["good","Route mix looks balanced; keep the v1 thresholds."];
+  return `<h3 style="margin-top:1.6rem">Insights · ${n} verified responses</h3>
+  <p class="note">Precision at this size: shares ±${moe(n).toFixed(0)} points, mean score ±${(1.96*s1/Math.sqrt(n)).toFixed(1)} points (95%). Indonesia n=${byC("ID").length}, Philippines n=${byC("PH").length}.</p>
+  <div class="ins">
+    <div class="panel"><span class="who">IOE · APINDO · ECOP</span><h3>Where firms get stuck</h3>
+      <p>Most common weakest area: ${topWeak.map(([d,c])=>`<b>${d}</b> ${pct(c,n)}%`).join(" · ")}</p>
+      <ul>${dimM.map(([id,en,v])=>`<li>${id} ${esc(en)}: <span class="num">${v.toFixed(0)}</span></li>`).join("")}</ul></div>
+    <div class="panel"><span class="who">IOE · Nusanova</span><h3>Learner pipeline</h3>
+      <span class="big num">${pledges.toLocaleString("en")}</span><p>learners pledged, ${pct(pledges,25000)}% of the 25,000 target · ${(pledges/n).toFixed(1)} per firm</p></div>
+    <div class="panel"><span class="who">APINDO · ECOP · regulators</span><h3>Governance gap</h3>
+      <span class="big num">${pct(noRules,n)}%</span><p>have no clear rules (or don't know) on what data staff may put into AI tools (statement 6.2).</p></div>
+    <div class="panel"><span class="who">Kation</span><h3>Pipeline mix</h3>
+      <ul><li>Imagine Together: <span class="num">${route("imagineTogether")}</span></li><li>Up and coming: <span class="num">${route("upAndComing")}</span> (lean: ${rows.filter(r=>(r.flags||[]).includes("lean")).length})</li><li>Adoption: <span class="num">${route("adoptionReady")}</span> · Copilot-fit <span class="num">${route("copilotFit")}</span></li><li>On Microsoft 365: ${pct(m365,n)}% · Google Workspace: ${pct(gws,n)}%</li></ul></div>
+    <div class="panel"><span class="who">Nusanova facility</span><h3>Financing demand</h3>
+      <p><b class="num">${proj.length}</b> firms (${pct(proj.length,n)}%) have a defined AI or digital project; <b class="num">${route("facility")}</b> meet the facility rules.</p>
+      <ul>${costBands.map(([b,c])=>`<li>${esc(b)}: <span class="num">${c}</span></li>`).join("")||"<li>No cost bands yet</li>"}</ul>
+      <p class="note">Bankability gap: ${pct(weakBooks,proj.length)}% of firms with a project keep only basic books or none.</p></div>
+    <div class="panel"><span class="who">Government · DFIs</span><h3>Inclusion</h3>
+      <p>Women-owned or led: ${w.length>=30&&nw.length>=30?`<span class="num">${mean(w).toFixed(1)}</span> vs <span class="num">${mean(nw).toFixed(1)}</span> for others`:`needs 30+ in each group (now ${w.length} and ${nw.length})`}.</p>
+      <p class="note">Change over time needs repeat respondents in later rounds.</p></div>
+    <div class="panel" style="grid-column:1/-1"><span class="who">Program team</span><h3>Threshold check</h3>
+      <p><span class="pill ${calib[0]}">${capShare}% in capacity building</span> ${esc(calib[1])}</p></div>
+  </div>`;
+}
+async function publishBench(){
+  const useTests = CONFIG.reviewMode && PF.tests;
+  const c=S.cfg, rows=S.rows.filter(r=>(useTests||!r.test) && !(r.flags||[]).includes("lowEffort"));
+  const cells={};
+  for(const ct of ["ID","PH"]) for(const tr of ["T1","T2","T3","T4"]){ const g=rows.filter(r=>r.country===ct&&r.scores.tier===tr); if(g.length>=c.publishMin){ cells[ct+"_"+tr]={n:g.length, mean:Math.round(g.reduce((a,r)=>a+r.scores.total,0)/g.length*10)/10, dims:Object.fromEntries(DIMS.map(d=>[d.id,Math.round(g.reduce((a,r)=>a+r.scores.dims[d.id],0)/g.length*10)/10]))}; } }
+  try{ const b={updatedAt:new Date().toISOString(), minN:c.publishMin, cells}; await Store.setBench(b); S.bench=b; renderIndex(); toast(Object.keys(cells).length?"Benchmark published":"Published, but no cell has enough responses yet"); }
+  catch(e){ toast("Could not publish the benchmark."); }
+}
+
+/* ---------- shell ---------- */
+function show(v){
+  for(const k of ["assess","result","program","index"]) $("#view"+k[0].toUpperCase()+k.slice(1)).hidden = k!==v;
+  $("#tabAssess").setAttribute("aria-selected", String(v==="assess"||v==="result"));
+  $("#tabProgram").setAttribute("aria-selected", String(v==="program"));
+  $("#tabIndex").setAttribute("aria-selected", String(v==="index"));
+}
+function renderChrome(){
+  const ph=S.country==="PH";
+  $("#cID").setAttribute("aria-pressed",String(!ph)); $("#cPH").setAttribute("aria-pressed",String(ph));
+  $("#lID").setAttribute("aria-pressed",String(S.lang==="id")); $("#lEN").setAttribute("aria-pressed",String(S.lang==="en"));
+  $("#lID").disabled = ph;
+  document.documentElement.lang = S.lang==="id"?"id":"en";
+  $("#appTitle").textContent = S.lang==="id" ? "Profil Kesiapan AI" : "AI Readiness Profiler";
+  $("#appSub2").textContent = t("prog"); $("#logoApindo").hidden = ph; $("#logoEcop").hidden = !ph; $("#techLabel").textContent = L()?"Mitra teknologi":"Technology partner";
+  $("#banner").textContent = t("banner");
+  $("#tabAssess").textContent=t("tabAssess"); $("#tabProgram").textContent=t("tabProgram"); $("#tabIndex").textContent=t("tabIndex");
+}
+function rerenderAll(){ renderChrome(); if(!$("#viewResult").hidden && S.result){ S.result=score(S.form,S.cfg); renderResult("keep"); } renderAssess(); if(S.admin){ renderProgram(); renderIndex(); } }
+$("#cID").onclick=()=>{ S.country="ID"; savePrefs(); rerenderAll(); };
+$("#cPH").onclick=()=>{ S.country="PH"; S.lang="en"; savePrefs(); rerenderAll(); };
+$("#lID").onclick=()=>{ if(S.country==="PH") return; S.lang="id"; savePrefs(); rerenderAll(); };
+$("#lEN").onclick=()=>{ S.lang="en"; savePrefs(); rerenderAll(); };
+$("#tabAssess").onclick=()=>show(S.result&&!$("#viewResult").hidden?"result":"assess");
+$("#tabProgram").onclick=()=>{ renderProgram(); show("program"); };
+$("#tabIndex").onclick=()=>{ renderIndex(); show("index"); };
+
+renderChrome(); renderAssess(); show("assess");
+
+/* ---------- synthetic test data (review only) ---------- */
+function makeDummies(n){
+  let seed=Date.now()%2147483647||7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const gauss=()=>{ let u=0,v=0; while(!u)u=rnd(); while(!v)v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); };
+  const pick=(arr,w)=>{ let x=rnd()*w.reduce((a,b)=>a+b,0); for(let i=0;i<arr.length;i++){ x-=w[i]; if(x<=0) return arr[i]; } return arr[arr.length-1]; };
+  const offset={D1:-.2,D2:.3,D3:-.1,D4:.1,D5:-.1,D6:-.4}; // assumed pattern, synthetic only
+  const items=[];
+  for(let i=0;i<n;i++){
+    const country=rnd()<.5?"ID":"PH";
+    const tier=pick(["T1","T2","T3","T4"],[40,35,20,5]);
+    const staff={T1:1+Math.floor(rnd()*9),T2:10+Math.floor(rnd()*40),T3:50+Math.floor(rnd()*150),T4:200+Math.floor(rnd()*101)}[tier];
+    const latent=Math.max(0,Math.min(4,1.8+gauss()*.7+({T1:-.3,T2:0,T3:.3,T4:.5}[tier])));
+    const f={staff:String(staff), staffC:String(Math.floor(rnd()*staff*.4)), daily:String(Math.max(1,Math.round(staff*(.3+rnd()*.6)))),
+      office:pick(["none","m365basic","m365std","m365prem","gws","other"],[25,10,20,8,27,10]), size:pick(["m","s","md","l"],{T1:[80,18,2,0],T2:[35,50,13,2],T3:[5,45,40,10],T4:[0,15,45,40]}[tier]),
+      legal:pick(["sole","partner","corp","coop"],[35,15,45,5]), years:pick(["lt2","2-5","6-10","gt10"],[12,30,30,28]),
+      i1:rnd()<.3?"yes":"no", i4:pick(["audited","unaudited","books","none"],[12,30,45,13])};
+    for(const d of DIMS) d.items.forEach(it=>{ const v=Math.round(latent+offset[d.id]+gauss()*.8); f["q"+it[0]]= rnd()<.03?"dk":String(Math.max(0,Math.min(4,v))); });
+    const r=score(f,S.cfg);
+    const doc={v:1, submittedAt:new Date(Date.now()-Math.floor(rnd()*30)*864e5).toISOString(), country, lang:country==="PH"?"en":"id", test:true, dummy:true,
+      profile:{company:"Dummy "+String(i+1).padStart(3,"0"), region:country==="PH"?PH_REG[Math.floor(rnd()*PH_REG.length)]:ID_PROV[Math.floor(rnd()*ID_PROV.length)], sector:SECTORS[Math.floor(rnd()*SECTORS.length)][0], legal:f.legal, years:f.years, staff, staffC:Number(f.staffC), size:f.size, daily:Number(f.daily), office:f.office, pledge:Math.floor(rnd()*Math.min(12,staff+1)), women:rnd()<.3?"yes":"no", exports:rnd()<.15?"yes":"no", member:rnd()<.7?"yes":"no", role:"owner"},
+      answers:Object.fromEntries(DIMS.flatMap(d=>d.items.map(it=>[it[0].replace(".","_"), f["q"+it[0]]==="dk"?"dk":Number(f["q"+it[0]])]))),
+      invest:{i1:f.i1, i1d:f.i1==="yes"?"Dummy project":"", i2:f.i1==="yes"?pick(["lt5","5-25","25-100","100-500","gt500"],[35,35,20,8,2]):"", i3:"", i4:f.i4, i5:"", i6:[]},
+      contact:{name:"Dummy", email:"dummy@example.com", phone:""}, consent:{agreed:true, text:"dummy", lang:"en"},
+      scores:{dims:Object.fromEntries(Object.entries(r.dims).map(([k,v])=>[k,Math.round(v*10)/10])), total:r.total, level:r.level, tier:r.tier, dk:r.dk},
+      routes:r.routes, flags:r.flags, review:{status:"pending"}};
+    items.push({id:"d"+Date.now().toString(36)+i.toString(36)+Math.floor(rnd()*1e6).toString(36), doc});
+  }
+  return items;
+}
+function dummyPanel(){
+  if(!CONFIG.reviewMode) return "";
+  const nd=S.rows.filter(r=>r.dummy).length;
+  return `<div class="dummy-panel"><div><b>Test data</b><p class="note">${nd?`${nd} dummy responses loaded. They are synthetic, for previewing the index only.`:"Fill the index with 300 synthetic firms to see what it looks like at pilot scale."}</p></div>
+    <div class="actions"><button class="btn primary js-dummy" type="button">Add 300 dummy responses</button>${nd?`<button class="btn js-clear" type="button">Remove dummy responses</button>`:""}</div></div>`;
+}
+function bindDummy(root){ root.querySelectorAll(".js-dummy").forEach(b=>b.onclick=()=>addDummies(b)); root.querySelectorAll(".js-clear").forEach(b=>b.onclick=clearDummies); }
+async function addDummies(btn){
+  const b=btn; if(b){ b.disabled=true; b.textContent="Adding…"; }
+  try{ const items=makeDummies(300); for(let i=0;i<items.length;i+=100){ await Store.saveMany(items.slice(i,i+100)); } toast("300 dummy responses added"); PF.tests=true; await refreshRows(); }
+  catch(e){ toast("Could not add dummy responses."); if(b){ b.disabled=false; b.textContent="Add 300 dummy responses"; } }
+}
+async function clearDummies(){
+  try{ await Store.clearDummy(); toast("Dummy responses removed"); await refreshRows(); }catch(e){ toast("Could not remove dummy responses."); }
+}
+
+/* ---------- data loading ---------- */
+async function refreshRows(){
+  if(!S.admin) return;
+  try{ S.rows=(await Store.list()).filter(r=>r&&r.scores); }catch(e){ toast("Could not load responses."); }
+  if(!$("#viewProgram").hidden) renderProgram(); if(!$("#viewIndex").hidden) renderIndex();
+}
+(async()=>{
+  S.admin = !!CONFIG.reviewMode;
+  if(S.admin){ $("#tabProgram").hidden=false; $("#tabIndex").hidden=false; }
+  try{ const c=await Store.getConfig(); if(c) S.cfg={...DEFAULT_CFG,...c}; }catch(e){}
+  try{ S.bench=await Store.getBench(); }catch(e){}
+  refreshRows();
+})();
+$("#tabProgram").addEventListener("click",refreshRows);
+$("#tabIndex").addEventListener("click",refreshRows);
+</script>
+
+</body>
+</html>
