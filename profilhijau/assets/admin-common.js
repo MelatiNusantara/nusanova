@@ -1267,7 +1267,12 @@ function getQuestionScoreRowsFromScores(scores) {
       score: toNumber(qScores[qid]),
       max: toNumber(max, 1)
     };
-  }).filter(row => row.max > 0);
+  })
+    .filter(row => row.max > 0)
+    .sort(
+      (a, b) =>
+        Number(a.no) - Number(b.no)
+    );
 }
 
 function getLowestSections(sections) {
