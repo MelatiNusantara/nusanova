@@ -2810,6 +2810,93 @@
       restoreAssessmentAfterPrint
     );
 
+    function initQuestionScorePagination(root = document) {
+      const tbody =
+        root.querySelector("#questionScoreTableBody");
+
+      const pagination =
+        root.querySelector("#questionScorePagination");
+
+      if (!tbody || !pagination) {
+        return;
+      }
+
+      const rows =
+        Array.from(
+          tbody.querySelectorAll(
+            ".question-score-row"
+          )
+        );
+
+      const pageSize = 10;
+      const totalPages =
+        Math.max(
+          1,
+          Math.ceil(rows.length / pageSize)
+        );
+
+      let currentPage = 1;
+
+      function renderPage() {
+        const start =
+          (currentPage - 1) * pageSize;
+
+        const end =
+          start + pageSize;
+
+        rows.forEach((row, index) => {
+          row.style.display =
+            index >= start &&
+            index < end
+              ? ""
+              : "none";
+        });
+
+        pagination.innerHTML = `
+          <button
+            type="button"
+            class="btn secondary score-page-prev"
+            ${currentPage === 1 ? "disabled" : ""}
+          >
+            ← Sebelumnya
+          </button>
+
+          <span>
+            Halaman ${currentPage} dari ${totalPages}
+            • ${rows.length} pertanyaan
+          </span>
+
+          <button
+            type="button"
+            class="btn secondary score-page-next"
+            ${currentPage === totalPages ? "disabled" : ""}
+          >
+            Selanjutnya →
+          </button>
+        `;
+
+        pagination
+          .querySelector(".score-page-prev")
+          ?.addEventListener("click", () => {
+            if (currentPage > 1) {
+              currentPage -= 1;
+              renderPage();
+            }
+          });
+
+        pagination
+          .querySelector(".score-page-next")
+          ?.addEventListener("click", () => {
+            if (currentPage < totalPages) {
+              currentPage += 1;
+              renderPage();
+            }
+          });
+      }
+
+      renderPage();
+    }
+
     function showDashboard() {
       const missing = activeQuestions().filter(q => !isAnswered(q));
 
@@ -2853,6 +2940,7 @@
       const result = calculateScores();
       const mount = $("#dashboardMount");
       mount.innerHTML = renderDashboard(result);
+      initQuestionScorePagination(mount);
       mount.scrollIntoView({ behavior: "smooth", block: "start" });
 
       $("#printBtn")?.addEventListener(
@@ -2900,15 +2988,25 @@
         .filter(([qid]) => getMaxPoint(qid) > 0)
         .map(([qid, score]) => {
           const q = questionById(qid);
-          return `
-            <tr>
-              <td>${q ? getVisibleQuestionNo(q) : qid}</td>
-              <td>${escapeHtml(q ? q.title : "")}</td>
-              <td>${score}</td>
-              <td>${getMaxPoint(qid)}</td>
-            </tr>
-          `;
-        }).join("");
+
+          return {
+            qid,
+            no: q ? getVisibleQuestionNo(q) : Number(qid.replace("Q", "")),
+            title: q ? q.title : qid,
+            score,
+            max: getMaxPoint(qid)
+          };
+        })
+        .sort((a, b) => Number(a.no) - Number(b.no))
+        .map(row => `
+          <tr class="question-score-row">
+            <td>${row.no}</td>
+            <td>${escapeHtml(row.title)}</td>
+            <td>${row.score}</td>
+            <td>${row.max}</td>
+          </tr>
+        `)
+        .join("");
 
       return `
         <section class="dashboard card">
@@ -3020,14 +3118,17 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Kode</th>
+                    <th>No.</th>
                     <th>Pertanyaan</th>
                     <th>Skor</th>
                     <th>Maksimal</th>
                   </tr>
                 </thead>
-                <tbody>${scoreRows}</tbody>
+                <tbody id="questionScoreTableBody">
+                  ${scoreRows}
+                </tbody>
               </table>
+              <div class="score-pagination" id="questionScorePagination"></div>
             </div>
           </details>
         </section>
@@ -3856,6 +3957,8 @@
 
         <div id="userDashboardMount">${rendered.html}</div>
       `;
+
+      initQuestionScorePagination(root);
 
       $("#backToUsersBtn", root)?.addEventListener("click", () => renderUsersPage());
       $("#printBtn", root)?.addEventListener(
@@ -6792,6 +6895,14 @@
         color: #111827 !important;
         text-decoration: none !important;
       }
+
+      .print-target .question-score-row {
+        display: table-row !important;
+      }
+
+      .print-target .score-pagination {
+        display: none !important;
+      }
     }
   
     #userSearchInput {
@@ -9639,6 +9750,26 @@
         padding-bottom: 2px !important;
         border-top: 1px solid rgba(213, 224, 231, .75) !important;
       }
+    }
+
+    .score-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .score-pagination span {
+      font-weight: 700;
+      color: #52606d;
+      font-size: 13px;
+    }
+
+    .score-pagination button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
 
