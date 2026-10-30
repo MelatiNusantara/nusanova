@@ -46,6 +46,7 @@
         bindDetailCharts();
         bindDetailActions();
         drawDetailCharts();
+        initAdminQuestionScorePagination();
       } catch (error) {
         document.getElementById("mount").outerHTML = `
           <section class="card empty">
@@ -74,6 +75,100 @@
       }
 
       return [];
+    }
+
+    function initAdminQuestionScorePagination() {
+      const tbody =
+        document.getElementById(
+          "adminQuestionScoreBody"
+        );
+
+      const pagination =
+        document.getElementById(
+          "adminQuestionScorePagination"
+        );
+
+      if (!tbody || !pagination) {
+        return;
+      }
+
+      const rows =
+        Array.from(
+          tbody.querySelectorAll(
+            ".admin-question-score-row"
+          )
+        );
+
+      const pageSize = 10;
+      const totalPages =
+        Math.max(
+          1,
+          Math.ceil(rows.length / pageSize)
+        );
+
+      let currentPage = 1;
+
+      function renderPage() {
+        const start =
+          (currentPage - 1) * pageSize;
+
+        const end =
+          start + pageSize;
+
+        rows.forEach((row, index) => {
+          row.style.display =
+            index >= start &&
+            index < end
+              ? ""
+              : "none";
+        });
+
+        pagination.innerHTML = `
+          <button
+            class="btn secondary"
+            type="button"
+            id="adminScorePrev"
+            ${currentPage === 1 ? "disabled" : ""}
+          >
+            ← Sebelumnya
+          </button>
+
+          <span>
+            Halaman ${currentPage}
+            dari ${totalPages}
+            • ${rows.length} pertanyaan
+          </span>
+
+          <button
+            class="btn secondary"
+            type="button"
+            id="adminScoreNext"
+            ${currentPage === totalPages ? "disabled" : ""}
+          >
+            Selanjutnya →
+          </button>
+        `;
+
+        document
+          .getElementById("adminScorePrev")
+          ?.addEventListener("click", () => {
+            if (currentPage > 1) {
+              currentPage -= 1;
+              renderPage();
+            }
+          });
+
+        document
+          .getElementById("adminScoreNext")
+          ?.addEventListener("click", () => {
+            if (currentPage < totalPages) {
+              currentPage += 1;
+              renderPage();
+            }
+          });
+      }
+
+      renderPage();
     }
 
     function renderDetail(data) {
@@ -210,15 +305,15 @@
               <table class="admin-table score-detail-table">
                 <thead>
                   <tr>
-                    <th>Kode</th>
+                    <th>No.</th>
                     <th>Pertanyaan</th>
                     <th>Skor</th>
                     <th>Maks</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="adminQuestionScoreBody">
                   ${questionRows.map(row => `
-                    <tr>
+                    <tr class="admin-question-score-row">
                       <td>${escapeHtml(String(row.no))}</td>
                       <td>${escapeHtml(row.title)}</td>
                       <td>${formatNumber(row.score)}</td>
@@ -227,6 +322,10 @@
                   `).join("")}
                 </tbody>
               </table>
+              <div
+                class="admin-pagination"
+                id="adminQuestionScorePagination"
+              ></div>
             </div>
           </details>
         </section>
